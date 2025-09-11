@@ -1,0 +1,36 @@
+<html lang="en">
+<head>
+    <title>Metoda</title>
+    <link rel="stylesheet" href="/static/styles/index_style.css">
+</head>
+<header>
+    <h1>
+        <a href="/materials"><img src="/static/img/logo.png" alt="home"></a>
+    </h1>
+</header>
+<form action="/materials" method="GET">
+    <input type="text" name="query" placeholder="Введите запрос" value="{{ .query }}">
+    <button type="submit">Найти</button>
+</form>
+
+<div>
+    <button type="button" onclick="window.location.href='/order'">Корзина</button> 
+</div>
+
+<div class="catalog">
+    <h2>Вещества</h2>
+    {{ range .materials }}
+    <div class="card">
+        <h3>{{ .Title }}</h3>
+        <p>{{ .Description }}</p>
+        <small>Mr: {{ .RelativeMolecularMass }}</small>
+        <div>
+            <a href="/material/{{ .ID }}">Подробнее</a>
+        </div>
+    </div>
+    {{ else }}
+    <p>Ничего не найдено.</p>
+    {{ end }}
+    
+</div>
+</html>

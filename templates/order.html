@@ -1,0 +1,47 @@
+<html lang="en">
+<head>
+    <title>Metoda</title>
+    <link rel="stylesheet" href="/static/styles/index_style.css">
+    <link rel="stylesheet" href="/static/styles/order_style.css">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        .order-header { margin-bottom: 16px; }
+        .order-list { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+        .order-item { border: 1px solid #ddd; border-radius: 8px; padding: 12px; }
+        .order-item h4 { margin: 0 0 8px; font-size: 18px; }
+        .muted { color: #666; font-size: 14px; }
+    </style>
+    
+</head>
+<header>
+    <h1>
+        <a href="/materials"><img src="/static/img/logo.png" alt="home" width="50px" height="50px"></a>
+    </h1>
+    
+</header>
+<main>
+    <div class="order-header">
+        <h2>Ваша заявка:</h2>
+        <p class="muted">Кислота: {{ .acid.Title }}</p>
+    </div>
+
+    <ul class="order-list">
+        {{ range .orderItems }}
+        <li class="order-item">
+            {{ $m := index $.materialsMap .MaterialId }}
+            <h4><a href="/material/{{ $m.ID }}">{{ $m.Title }}</a></h4>
+            <p>{{ $m.Description }}</p>
+            <p class="muted">Mr: {{ $m.RelativeMolecularMass }}</p>
+            <p class="muted">Масса материала: {{ .MaterialMass }}</p>
+            <p class="muted">Объем газа: {{ .GasVolume }}</p>
+            <p class="muted">Массовая доля: {{ .MassFractionPercentage }}%</p>
+        </li>
+        {{ else }}
+        <li class="order-item">Заявка пуста</li>
+        {{ end }}
+    </ul>
+
+</main>
+</html>
+
