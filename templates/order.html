@@ -1,47 +1,120 @@
-<html lang="en">
-<head>
-    <title>Metoda</title>
-    <link rel="stylesheet" href="/static/styles/index_style.css">
-    <link rel="stylesheet" href="/static/styles/order_style.css">
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <style>
-        .order-header { margin-bottom: 16px; }
-        .order-list { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
-        .order-item { border: 1px solid #ddd; border-radius: 8px; padding: 12px; }
-        .order-item h4 { margin: 0 0 8px; font-size: 18px; }
-        .muted { color: #666; font-size: 14px; }
-    </style>
-    
-</head>
-<header>
-    <h1>
-        <a href="/materials"><img src="/static/img/logo.png" alt="home" width="50px" height="50px"></a>
-    </h1>
-    
-</header>
-<main>
-    <div class="order-header">
-        <h2>Ваша заявка:</h2>
-        <p class="muted">Кислота: {{ .acid.Title }}</p>
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta charset="utf-8" />
+    <title>Заявки</title>
+    <link rel="stylesheet" href="/static/styles/globals.css" />
+    <link rel="stylesheet" href="/static/styles/order.css" />
+    <link rel="icon" href="/img/logo-sqr.png" type="image/png" />
+  </head>
+  <body>
+    <div class="screen">
+      <div class="div">
+        <main class="body">
+          <section class="view">
+            <article class="view-2">
+              <header class="div-wrapper">
+                <h1 class="text-wrapper">Ваша заявка:</h1>
+              </header>
+              <div class="view-wrapper">
+                <div class="view-3">
+                  <div class="view-4">
+                    <div class="view-5">
+                      <span class="text-wrapper-2">Кислота</span>
+                      <div class="view-6">
+                        <div class="view-7" aria-label="Выбранная кислота">{{ .acid.Title }}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <section class="view-8">
+                {{ range .cards }}
+                <article class="element">
+                  <div class="view-9">
+                    <div class="view-10">
+                      <img class="image" src="{{ .ImageURL }}" alt="{{ .Title }}" />
+                      <h2 class="text-wrapper-4">{{ .Title }}</h2>
+                    </div>
+                    <div class="view-11">
+                      <div class="mr-wrapper">
+                        <p class="mr">
+                          <span class="span">Mr:</span> <span class="text-wrapper-5"> {{ printf "%.2f" .RelativeMolecularMass }} г/моль</span>
+                        </p>
+                      </div>
+                      <div class="background-border">
+                        <p class="text">{{ .Description }}</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="view-12">
+                    <div class="view-13">
+                      <div class="view-14">
+                        <label for="material-{{ .MaterialID }}-mass" class="text-wrapper-2">Масса технического вещества (г):</label>
+                        <div class="view-15">
+                          <input
+                            type="number"
+                            id="material-{{ .MaterialID }}-mass"
+                            class="view-16"
+                            value="{{ printf "%.2f" .MaterialMass }}"
+                            step="0.01"
+                            min="0"
+                            aria-describedby="material-{{ .MaterialID }}-mass-desc"
+                            readonly
+                          />
+                        </div>
+                      </div>
+                      <div class="view-14">
+                        <label for="material-{{ .MaterialID }}-volume" class="text-wrapper-2">Объем выделившегося газа (л):</label>
+                        <div class="view-15">
+                          <input
+                            type="number"
+                            id="material-{{ .MaterialID }}-volume"
+                            class="view-16"
+                            value="{{ printf "%.3f" .GasVolume }}"
+                            step="0.001"
+                            min="0"
+                            aria-describedby="material-{{ .MaterialID }}-volume-desc"
+                            readonly
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    <div class="view-17">
+                      <label for="material-{{ .MaterialID }}-impurity" class="text-wrapper-2"
+                        >Рассчитанная массовая доля примесей (%)</label
+                      >
+                      <div class="view-15">
+                        <input
+                          type="number"
+                          id="material-{{ .MaterialID }}-impurity"
+                          class="view-16"
+                          value="{{ printf "%.1f" .MassFractionPercentage }}"
+                          step="0.1"
+                          min="0"
+                          max="100"
+                          aria-describedby="material-{{ .MaterialID }}-impurity-desc"
+                          readonly
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </article>
+                {{ end }}
+              </section>
+            </article>
+          </section>
+        </main>
+        <header class="header">
+          <div class="container">
+            <div class="chatgpt-image-wrapper">
+              <a href="/materials"><img class="chatgpt-image" src="/img/logo.png" alt="Логотип приложения" /></a>
+            </div>
+            <div class="view-18"></div>
+          </div>
+        </header>
+      </div>
     </div>
-
-    <ul class="order-list">
-        {{ range .orderItems }}
-        <li class="order-item">
-            {{ $m := index $.materialsMap .MaterialId }}
-            <h4><a href="/material/{{ $m.ID }}">{{ $m.Title }}</a></h4>
-            <p>{{ $m.Description }}</p>
-            <p class="muted">Mr: {{ $m.RelativeMolecularMass }}</p>
-            <p class="muted">Масса материала: {{ .MaterialMass }}</p>
-            <p class="muted">Объем газа: {{ .GasVolume }}</p>
-            <p class="muted">Массовая доля: {{ .MassFractionPercentage }}%</p>
-        </li>
-        {{ else }}
-        <li class="order-item">Заявка пуста</li>
-        {{ end }}
-    </ul>
-
-</main>
+  </body>
 </html>
-

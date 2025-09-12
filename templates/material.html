@@ -1,14 +1,45 @@
-<html lang="en">
-<head>
-    <title>Metoda</title>
-    <link rel="stylesheet" href="/static/styles/index_style.css">
-</head>
-<header>
-    <h1>
-        <a href="/materials"><img src="/static/img/logo.png" alt="home" width="50px" height="50px"></a>
-    </h1>
-</header>
-    <h1>{{ .material.Title }}</h1>
-    <p>{{ .material.Description }}</p>
-    <p>Относительная молекулярная масса: {{ .material.RelativeMolecularMass }}</p>
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta charset="utf-8" />
+    <title>{{ .material.Title }}</title>
+    <link rel="stylesheet" href="/static/styles/globals.css" />
+    <link rel="stylesheet" href="/static/styles/material.css" />
+    <link rel="icon" href="/img/logo-sqr.png" type="image/png" />
+  </head>
+  <body>
+    <div class="screen">
+      <div class="div">
+        <div class="body">
+          <div class="view">
+            <div class="view-2">
+              <div class="view-wrapper">
+                <div class="div-wrapper"><div class="text-wrapper">{{ .material.Title }}</div></div>
+              </div>
+              <div class="container-wrapper">
+                <div class="container">
+                  <div class="div-wrapper"><div class="text-wrapper-2">Описание</div></div>
+                  <div class="div-wrapper">
+                    <p class="p">{{ .material.Description }}</p>
+                  </div>
+                  <div class="horizontal-divider-wrapper"><div class="horizontal-divider"></div></div>
+                  <p class="mr"><span class="span">Mr:</span> <span class="text-wrapper-3"> {{ printf "%.2f" .material.RelativeMolecularMass }} г/моль</span></p>
+                </div>
+              </div>
+            </div>
+            <img class="image" src="{{ .material.ImageURL }}" alt="{{ .material.Title }}" />
+          </div>
+        </div>
+        <header class="header">
+          <div class="container-2">
+            <div class="chatgpt-image-wrapper">
+              <a href="/materials"><img class="chatgpt-image" src="/img/logo.png" /></a>
+            </div>
+            <div class="view-3"></div>
+          </div>
+        </header>
+      </div>
+    </div>
+  </body>
 </html>

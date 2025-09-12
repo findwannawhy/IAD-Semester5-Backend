@@ -21,8 +21,10 @@ type Material struct {
   Title string
 	Description string
 	RelativeMolecularMass float64
+	ImageURL string
 }
 
+// Получаем все материалы
 func (r *Repository) GetMaterials() ([]Material, error) {
   materials := []Material{
     {
@@ -30,24 +32,28 @@ func (r *Repository) GetMaterials() ([]Material, error) {
       Title: "Известняк (CaCO3)",
 			Description: "Осадочная порода, состоящая преимущественно из кальцита (карбоната кальция).",
 			RelativeMolecularMass:  100.07,
+			ImageURL: "/img/izvestnyak.jpg",
     },
     {
       ID:    2,
       Title: "Мрамор (CaCO3)",
 			Description: "Метаморфическая порода из кальцита, прочная, декоративная, полируемая.",
 			RelativeMolecularMass:  100.07,
+			ImageURL: "/img/mramor.jpg",
     },
     {
       ID:    3,
       Title: "Металлический цинк (Zn)",
 			Description: "Голубовато-белый металл, пластичный, коррозионно-стойкий.",
 			RelativeMolecularMass:  65.39,
+			ImageURL: "/img/cink.jpg",
     },
 		{
       ID:    4,
       Title: "Сода (Na2CO3)",
 			Description: "Белый, без запаха, водорастворимый порошок или кристаллы, представляющие собой среднюю соль угольной кислоты",
 			RelativeMolecularMass:  105.99,
+			ImageURL: "/img/soda.jpg",
     },
   }
   
@@ -58,6 +64,7 @@ func (r *Repository) GetMaterials() ([]Material, error) {
   return materials, nil
 }
 
+// Получаем материал по его id
 func (r *Repository) GetMaterial(id int) (Material, error) {
 	materials, err := r.GetMaterials()
 	if err != nil {
@@ -72,15 +79,19 @@ func (r *Repository) GetMaterial(id int) (Material, error) {
 	return Material{}, fmt.Errorf("материал не найден")
 }
 
+// Получаем материалы по названию
 func (r *Repository) GetMaterialsByTitle(title string) ([]Material, error) {
 	materials, err := r.GetMaterials()
 	if err != nil {
 		return []Material{}, err
 	}
 
+	// Убираем пробелы и нормализуем регистр для поискового запроса
+	trimmedQuery := strings.TrimSpace(strings.ToLower(title))
+
 	var result []Material
 	for _, material := range materials {
-		if strings.Contains(strings.ToLower(material.Title), strings.ToLower(title)) {
+		if strings.Contains(strings.ToLower(material.Title), trimmedQuery) {
 			result = append(result, material)
 		}
 	}
@@ -95,6 +106,7 @@ type Acid struct {
 	Title string
 }
 
+// Получаем все кислоты
 func (r *Repository) GetAcids() ([]Acid, error) {
   acids := []Acid{
     {
@@ -114,6 +126,7 @@ func (r *Repository) GetAcids() ([]Acid, error) {
   return acids, nil
 }
 
+// Получаем кислоту по его id
 func (r *Repository) GetAcid(id int) (Acid, error) {
 	acids, err := r.GetAcids()
 	if err != nil {
@@ -130,22 +143,40 @@ func (r *Repository) GetAcid(id int) (Acid, error) {
 
 // Заказ
 
-type OrderInfo struct {
+type Order struct {
 	ID int
 	AcidId int
 }
 
-func (r *Repository) GetOrder() (OrderInfo, error) {
-  orderInfo := OrderInfo{
-		ID: 1,
-		AcidId: 1,
-  }
+// Получаем все заказы
+func (r *Repository) GetOrders() ([]Order, error) {
+  orders := []Order{
+		{
+			ID: 1,
+			AcidId: 1,
+		},
+	}
   
-  if orderInfo.AcidId == 0 {
-    return OrderInfo{}, fmt.Errorf("кислота не выбрана")
+  if len(orders) == 0 {
+    return nil, fmt.Errorf("заказы не найдены")
   }
 
-  return orderInfo, nil
+  return orders, nil
+}
+
+// Получаем заказ по его id
+func (r *Repository) GetOrder(id int) (Order, error) {
+	orders, err := r.GetOrders()
+	if err != nil {
+		return Order{}, err
+	}
+	
+	for _, order := range orders {
+		if order.ID == id {
+			return order, nil
+		}
+	}
+	return Order{}, fmt.Errorf("заказ не найден")
 }
 
 // Карточки заказов
@@ -159,7 +190,8 @@ type OrderItem struct {
 	MassFractionPercentage float64
 }
 
-func (r *Repository) GetOrderItems() ([]OrderItem, error) {
+// Получаем все услуги добавленные во все заказы
+func (r *Repository) GetAllOrderItems() ([]OrderItem, error) {
   orderItems := []OrderItem{
     {
       ID:    1,
@@ -180,14 +212,15 @@ func (r *Repository) GetOrderItems() ([]OrderItem, error) {
   }
   
   if len(orderItems) == 0 {
-    return nil, fmt.Errorf("заявка пуста")
+    return nil, fmt.Errorf("не найдено заказанных услуг")
   }
 
   return orderItems, nil
 }
 
-func (r *Repository) GetOrderItemsByOrderId(id int) ([]OrderItem, error) {
-	orderItems, err := r.GetOrderItems()
+// Получаем услуги добавленные в один заказ по id заказа
+func (r *Repository) GetOrderItems(id int) ([]OrderItem, error) {
+	orderItems, err := r.GetAllOrderItems()
 	if err != nil {
 		return []OrderItem{}, err
 	}
@@ -199,4 +232,14 @@ func (r *Repository) GetOrderItemsByOrderId(id int) ([]OrderItem, error) {
 		}
 	}
 	return result, nil
+}
+
+// Получаем количество услуг добавленных во все заказы
+func (r *Repository) GetAllOrderItemsCount() (int, error) {
+	orderItems, err := r.GetAllOrderItems()
+	if err != nil {
+		return 0, err
+	}
+
+	return len(orderItems), nil
 }

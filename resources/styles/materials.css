@@ -1,0 +1,550 @@
+/* Экран материалов: базовая обертка страницы */
+.screen {
+  background-color: #ffffff;
+  display: block;
+  width: 100%;
+}
+
+/* Внутренний контейнер: ширина 100% и отступ под фиксированный header */
+.screen .div {
+  background-color: #ffffff;
+  width: 100%;
+  min-height: calc(100vh - 76px);
+  padding-top: 76px;
+  position: relative;
+}
+
+/* Основной контейнер контента: центрирование и максимальная ширина */
+.screen .body {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 1320px;
+  align-items: stretch;
+  padding: 40px 16px;
+  margin: 0 auto;
+}
+
+/* Секция каталога материалов */
+.screen .catalog {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 30px;
+  padding: 24px 0px 0px;
+  position: relative;
+  align-self: stretch;
+  width: 100%;
+  flex: 0 0 auto;
+}
+
+/* Вариативный контейнер секции (служебная обертка) */
+.screen .view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  align-self: stretch;
+  width: 100%;
+  flex: 0 0 auto;
+}
+
+/* Заголовок страницы каталога */
+.screen .text-wrapper {
+  align-self: stretch;
+  font-family: "Inter-Bold", Helvetica;
+  font-weight: 700;
+  color: #1c1c1c;
+  font-size: 29.3px;
+  text-align: center;
+  line-height: 42px;
+  position: relative;
+  margin-top: -1.00px;
+  letter-spacing: 0;
+}
+
+/* Строка поиска: контейнер */
+.screen .view-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 10px;
+  position: relative;
+  align-self: stretch;
+  width: 100%;
+  flex: 0 0 auto;
+}
+
+/* Поле поиска: визуальная обертка с рамкой и скруглением */
+.screen .overlap-group-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 600px;
+  height: 40px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--gray-border);
+}
+
+/* Поле поиска: внутренности (иконка + ввод) */
+.screen .overlap-group {
+  position: relative;
+  width: 100%;
+  height: 40px;
+  display: flex;
+  align-items: center;
+}
+
+/* Иконка поиска слева */
+.screen .image-fill {
+  display: flex;
+  align-items: center;
+  height: 40px;
+  padding: 12px 12px 12px 13px;
+}
+
+.screen .component {
+  position: relative;
+  width: 16px;
+  height: 16px;
+}
+
+.screen .container {
+  display: none;
+}
+
+.screen .text-wrapper-2 {
+  width: fit-content;
+  font-family: "Inter-Regular", Helvetica;
+  font-weight: 400;
+  color: #c7c7cc;
+  font-size: 14px;
+  line-height: normal;
+  position: relative;
+  margin-top: -1.00px;
+  letter-spacing: 0;
+}
+
+.screen .component-wrapper {
+  display: flex;
+  align-items: center;
+  padding: 0px 12px 0px 8px;
+  height: 40px;
+  flex: 1;
+}
+
+.screen .component-2 {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+/* Сетка карточек материалов */
+.screen .view-2 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 30px;
+  width: 100%;
+}
+
+/* Карточка материала: контейнер с рамкой и скруглением */
+.screen .view-3 {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden;
+  border: 2px solid #d7d7db;
+  transition: border-color 0.2s ease;
+}
+
+.screen .view-3:hover {
+  border-color: var(--green-border);
+}
+
+/* Изменение цвета текста внутри карточки при наведении (кроме текста кнопки) */
+.screen .view-3:hover .text-wrapper-3,
+.screen .view-3:hover .text-wrapper-4,
+.screen .view-3:hover .mr,
+.screen .view-3:hover .span,
+.screen .view-3:hover .text-wrapper-5 {
+  color: var(--grat-soft);
+}
+
+/* Изображение карточки (обложка материала) */
+.screen .img {
+  position: relative;
+  align-self: stretch;
+  width: 100%;
+  height: 250px;
+  background-size: cover;
+  background-position: 50% 50%;
+}
+
+/* Тело карточки: внутренние отступы и вертикальный стек */
+.screen .body-2 {
+  align-items: flex-start;
+  gap: 20px;
+  padding: 24px 36px;
+  position: relative;
+  align-self: stretch;
+  width: 100%;
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.screen .div-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  position: relative;
+  align-self: stretch;
+  width: 100%;
+  flex: 0 0 auto;
+}
+
+/* Название материала */
+.screen .text-wrapper-3 {
+  font-family: "Inter-Bold", Helvetica;
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 22.4px;
+  position: relative;
+  align-self: stretch;
+  margin-top: -1.00px;
+  color: #1c1c1e;
+  text-align: center;
+  letter-spacing: 0;
+}
+
+.screen .view-4 {
+  display: flex;
+  flex-direction: column;
+  height: 143px;
+  align-items: flex-start;
+  position: relative;
+  align-self: stretch;
+  width: 100%;
+}
+
+/* Краткое описание материала */
+.screen .text-wrapper-4 {
+  font-family: "Inter-Regular", Helvetica;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 21px;
+  position: relative;
+  align-self: stretch;
+  margin-top: -1.00px;
+  color: #1c1c1e;
+  text-align: center;
+  letter-spacing: 0;
+}
+
+.screen .frame {
+  position: relative;
+  flex: 1;
+  width: 148px;
+  min-height: 1px;
+  flex-grow: 1;
+}
+
+/* Блок цены (inline) */
+.screen .mr-wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+  flex: 0 0 auto;
+}
+
+/* Цена/значение: часть текста может быть жирной через .span */
+.screen .mr {
+  position: relative;
+  width: fit-content;
+  margin-top: -1.00px;
+  font-family: "Inter-Bold", Helvetica;
+  font-weight: 400;
+  color: #000000;
+  font-size: 16px;
+  letter-spacing: 0;
+  line-height: 22px;
+  white-space: nowrap;
+}
+
+/* Жирная часть цены */
+.screen .span {
+  font-weight: 700;
+}
+
+/* Единицы измерения/примечание к цене */
+.screen .text-wrapper-5 {
+  font-family: "Inter-Regular", Helvetica;
+}
+
+/* Нижняя панель карточки: цена + кнопка */
+.screen .view-5 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0px 98.24px;
+  position: relative;
+  align-self: stretch;
+  width: 100%;
+  flex: 0 0 auto;
+}
+
+/* Кнопка действия (например, Добавить в заказ) */
+.screen .view-6 {
+  display: inline-flex;
+  flex-direction: column;
+  min-width: 80px;
+  min-height: 44px;
+  align-items: center;
+  padding: 11px 17px;
+  position: relative;
+  flex: 0 0 auto;
+  background-color: #ffffff;
+  border-radius: 6px;
+  border: 1px solid;
+  border-color: #00be6e;
+  transition: background-color 0.25s ease-in-out;
+}
+
+/* Текст на кнопке */
+.screen .text {
+  width: fit-content;
+  font-family: "Inter-Regular", Helvetica;
+  font-weight: 400;
+  color: var(--green);
+  font-size: 14px;
+  text-align: center;
+  line-height: 22px;
+  white-space: nowrap;
+  position: relative;
+  margin-top: -1.00px;
+  letter-spacing: 0;
+}
+
+/* Альтернативное изображение карточки (вариант 2) */
+.screen .img-2 {
+  position: relative;
+  align-self: stretch;
+  width: 100%;
+  height: 250px;
+  background-image: url(./img/img-2.png);
+  background-size: cover;
+  background-position: 50% 50%;
+}
+
+/* Альтернативное изображение карточки (вариант 3) */
+.screen .img-3 {
+  position: relative;
+  align-self: stretch;
+  width: 100%;
+  height: 250px;
+  background-image: url(./img/img-3.png);
+  background-size: cover;
+  background-position: 50% 50%;
+}
+
+/* Вариант карточки фиксированной ширины/высоты */
+.screen .view-7 {
+  display: flex;
+  flex-direction: column;
+  max-width: 440px;
+  width: 420px;
+  height: 590px;
+  align-items: center;
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden;
+  border: 2px solid;
+  border-color: #d7d7db;
+}
+
+/* Ещё одно изображение карточки (вариант 4) */
+.screen .img-4 {
+  position: relative;
+  align-self: stretch;
+  width: 100%;
+  height: 250px;
+  background-image: url(./img/image.png);
+  background-size: cover;
+  background-position: 50% 50%;
+}
+
+/* Фиксированный хедер страницы */
+.screen .header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  width: 100%;
+  height: 76px;
+  background-color: #eff0f4;
+}
+
+/* Контейнер содержимого в хедере */
+.screen .container-2 {
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+  max-width: 1320px;
+  height: 76px;
+  align-items: center;
+  gap: 0;
+  padding: 16px;
+  margin: 0 auto;
+}
+
+/* Адаптив: планшеты и десктопы до 1200px */
+@media (max-width: 1200px) {
+  .screen .body {
+    padding: 32px 16px;
+  }
+  .screen .view-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+  }
+}
+
+/* Адаптив: мобильные устройства */
+@media (max-width: 768px) {
+  .screen .body {
+    padding: 24px 12px;
+  }
+  .screen .view-2 {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .screen .view-5 {
+    gap: 16px;
+  }
+}
+
+/* Блок для логотипа/картинки в хедере */
+.screen .chatgpt-image-wrapper {
+  display: flex;
+  width: 120px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  position: relative;
+}
+
+/* Изображение логотипа: вписывается без искажений */
+.screen .chatgpt-image {
+  position: relative;
+  height: 44px;
+  max-height: 44px;
+  width: auto;
+  max-width: 100%;
+  margin: 0;
+  object-fit: contain;
+}
+
+.screen .view-8 {
+  position: relative;
+  flex: 1;
+  min-width: 300px;
+  flex-grow: 1;
+  height: 40px;
+  border-radius: 8px;
+}
+
+/* Плавающая кнопка корзины в левом нижнем углу */
+.floating-cart {
+  position: fixed;
+  left: 16px;
+  bottom: 16px;
+  z-index: 2000;
+  width: 72px;
+  height: 72px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
+  border: 1px solid #e8e8ed;
+}
+
+/* Иконка внутри плавающей корзины */
+.floating-cart img {
+  max-width: 48px;
+  max-height: 48px;
+}
+/* Дублируем фиксированное позиционирование для корректности слоя */
+.floating-cart {
+  position: fixed;
+}
+/* Бейдж количества товаров в корзине */
+.floating-cart .cart-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 11px;
+  background: #00be6e;
+  color: #ffffff;
+  font-family: "Inter-Bold", Helvetica;
+  font-weight: 700;
+  font-size: 12px;
+  line-height: 22px;
+  text-align: center;
+  box-shadow: 0 0 0 2px #ffffff;
+}
+/* Original CSS code should be injected here */
+
+/* Additional styles for semantic elements and accessibility */
+.component-2 {
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: "Inter-Regular", Helvetica;
+  font-weight: 400;
+  color: #1c1c1e;
+  font-size: 14px;
+  line-height: normal;
+  width: 100%;
+  height: 100%;
+}
+
+.component-2::placeholder {
+  color: #c7c7cc;
+}
+
+.view-6 {
+  background: none;
+  border: 1px solid var(--green);
+  cursor: pointer;
+  transition: background-color 0.25s ease-in-out;
+}
+
+.view-6:hover {
+  background-color: #f0f0f5;
+}
+
+.view-6:focus-visible {
+  outline: 2px solid var(--green);
+  outline-offset: 2px;
+}
+
+.text-wrapper-2 {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
