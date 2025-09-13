@@ -26,6 +26,7 @@ type OrderCard struct {
   MaterialMass float64
   GasVolume float64
   MassFractionPercentage float64
+  StoichiometricCoefficient float64
 }
 
 func NewHandler(r *repository.Repository) *Handler {
@@ -57,7 +58,8 @@ func (h *Handler) GetMaterials(ctx *gin.Context) {
 
 	// В лаб1 у нас только один заказ, поэтому считаем все услуги всех заказов,
 	// чтобы не добавлять id в url, ведущую на каталог. Потом, когда мы сможем получать
-	// id заказа, на который будет вести корзина, мы заменим используемый метод
+	// id заказа, на который будет вести корзина, мы заменим используемый метод на 
+	// GetOrderItemsCount(id int), где id - id заказа, на который будет вести корзина
 	count, err := h.Repository.GetAllOrderItemsCount()
 	if err != nil {
 		logrus.Error(err)
@@ -111,25 +113,15 @@ func (h *Handler) GetOrder(ctx *gin.Context) {
 		logrus.Error(err)
 	}
 
+	itemsAmount, err := h.Repository.GetOrderItemsCount(order.ID)
+	if err != nil {
+		logrus.Error(err)
+	}
+
 	// Получаем карточки, добавленные в заказ по id заказа
 	orderItems, err := h.Repository.GetOrderItems(order.ID)
 	if err != nil {
 		logrus.Error(err)
-	}
-
-	// Получаем кислоты из репозитория, чтобы отобразить список для выбора в форме
-	acids, err := h.Repository.GetAcids()
-	if err != nil {
-		logrus.Error(err)
-	}
-
-	// Получаем кислоту, которую выбрал пользователь в заказе, из уже загруженного списка
-	var acid repository.Acid
-	for _, a := range acids {
-		if a.ID == order.AcidId {
-			acid = a
-			break
-		}
 	}
 
 	// Получаем список материалов
@@ -149,21 +141,22 @@ func (h *Handler) GetOrder(ctx *gin.Context) {
 	for _, it := range orderItems {
 		m := materialsMap[it.MaterialId]
 		cards = append(cards, OrderCard{
-			MaterialID: it.MaterialId,
-			Title: m.Title,
-			Description: m.Description,
-			RelativeMolecularMass: m.RelativeMolecularMass,
-			ImageURL: m.ImageURL,
-			MaterialMass: it.MaterialMass,
-			GasVolume: it.GasVolume,
-			MassFractionPercentage: it.MassFractionPercentage,
+			MaterialID:                it.MaterialId,
+			Title:                     m.Title,
+			Description:               m.Description,
+			RelativeMolecularMass:     m.RelativeMolecularMass,
+			ImageURL:                  m.ImageURL,
+			MaterialMass:              it.MaterialMass,
+			GasVolume:                 it.GasVolume,
+			MassFractionPercentage:    it.MassFractionPercentage,
+			StoichiometricCoefficient: m.StoichiometricCoefficient,
 		})
 	}
 
 	// Возвращаем html шаблон
 	ctx.HTML(http.StatusOK, "order.html", gin.H{
 		"order": order,
-		"acid": acid,
 		"cards": cards,
+		"itemsAmount": itemsAmount,
 	})
 }

@@ -6,7 +6,7 @@
     <title>Вещества</title>
     <link rel="stylesheet" href="/static/styles/globals.css" />
     <link rel="stylesheet" href="/static/styles/materials.css" />
-    <link rel="icon" href="/img/logo-sqr.png" type="image/png" />
+    <link rel="icon" href="http://localhost:9000/img/logo-sqr.png" type="image/png" />
   </head>
   <body>
     <div class="screen">
@@ -20,7 +20,7 @@
               <form class="overlap-group-wrapper" action="/materials" method="get">
                 <div class="overlap-group">
                   <div class="image-fill">
-                    <img class="component" src="/img/search.svg" alt="Поиск" />
+                    <img class="component" src="http://localhost:9000/img/search.svg" alt="Поиск" />
                   </div>
                   <div class="container">
                     <label for="search-input" class="text-wrapper-2">Поиск вещества...</label>
@@ -47,7 +47,7 @@
                 </div>
                 <div class="body-2">
                   <div class="div-wrapper">
-                    <h2 class="text-wrapper-3">{{ .Title }}</h2>
+                    <h2 class="text-wrapper-3">{{ .Title }} ({{ .Formula }})</h2>
                   </div>
                   <div class="div-wrapper">
                     <div class="view-4">
@@ -56,7 +56,8 @@
                     </div>
                   </div>
                   <div class="mr-wrapper">
-                    <p class="mr"><span class="span">Mr:</span> <span class="text-wrapper-5"> {{ printf "%.2f" .RelativeMolecularMass }} г/моль</span></p>
+                    <p class="mr"><span class="span">Отн. молекулярная масса:</span><br> <span class="text-wrapper-5"> {{ printf "%.2f" .RelativeMolecularMass }} г/моль</span></p>
+                    <p class="mr"><span class="span">Стехиометрический коэффициент:</span><br> <span class="text-wrapper-5"> {{ .StoichiometricCoefficient }} </span></p>
                   </div>
                   <div class="view-5">
                     <a class="view-6" href="/material/{{ .ID }}" aria-label="Подробнее о {{ .Title }}">
@@ -72,7 +73,7 @@
         <header class="header">
           <div class="container-2">
             <div class="chatgpt-image-wrapper">
-              <a href="/materials"><img class="chatgpt-image" src="/img/logo.png" alt="Логотип" /></a>
+              <a href="/materials"><img class="chatgpt-image" src="http://localhost:9000/img/logo.png" alt="Логотип" /></a>
             </div>
             <div class="view-8"></div>
           </div>
@@ -80,7 +81,7 @@
       </div>
     </div>
     <a href="/order/1" class="floating-cart" aria-label="Перейти в корзину">
-      <img src="/img/cart.png" alt="Корзина" />
+      <img src="http://localhost:9000/img/cart.png" alt="Корзина" />
       <span class="cart-badge" aria-label="Количество в корзине">{{ .Count }}</span>
     </a>
   </body>

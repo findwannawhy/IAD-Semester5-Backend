@@ -6,112 +6,145 @@
     <title>Заявки</title>
     <link rel="stylesheet" href="/static/styles/globals.css" />
     <link rel="stylesheet" href="/static/styles/order.css" />
-    <link rel="icon" href="/img/logo-sqr.png" type="image/png" />
+    <link rel="icon" href="http://localhost:9000/img/logo-sqr.png" type="image/png" />
   </head>
   <body>
     <div class="screen">
       <div class="div">
         <main class="body">
+          <section class="frame">
+            <h1 class="text-wrapper">Ваша заявка:</h1>
+          </section>
           <section class="view">
-            <article class="view-2">
-              <header class="div-wrapper">
-                <h1 class="text-wrapper">Ваша заявка:</h1>
-              </header>
-              <div class="view-wrapper">
-                <div class="view-3">
-                  <div class="view-4">
-                    <div class="view-5">
-                      <span class="text-wrapper-2">Кислота</span>
-                      <div class="view-6">
-                        <div class="view-7" aria-label="Выбранная кислота">{{ .acid.Title }}</div>
-                      </div>
+            <div class="div-2">
+              <div class="view-2">
+                <div class="div-wrapper">
+                  <label class="text-wrapper-2" for="molar-volume">Молярный объем (л/моль):</label>
+                </div>
+                <div class="view-wrapper">
+                  <div class="view-3">
+                    <input
+                      type="text"
+                      id="molar-volume"
+                      class="text-wrapper-2"
+                      value="{{ printf "%.1f" .order.MolarVolume }}"
+                      readonly
+                      aria-label="Молярный объем в литрах на моль"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+          <section class="view-4">
+            <div class="view-5">
+              <div class="frame-wrapper">
+                <div class="frame-2">
+                  <div class="frame-3">
+                    <h2 class="text-wrapper-3">Вещество:</h2>
+                  </div>
+                  <div class="frame-4">
+                    <div class="frame-3">
+                      <span class="text-wrapper-4">Объем выделившегося газа (л):</span>
+                    </div>
+                    <div class="frame-3">
+                      <span class="text-wrapper-4">Масса технического вещества (г):</span>
+                    </div>
+                    <div class="frame-3">
+                      <span class="text-wrapper-4">Рассчитанная массовая доля примесей (%):</span>
                     </div>
                   </div>
                 </div>
               </div>
-              <section class="view-8">
+              <div class="view-6">
                 {{ range .cards }}
                 <article class="element">
-                  <div class="view-9">
+                  <div class="card-content-wrapper">
+                    <div class="view-7">
+                      <div class="image-wrapper">
+                        <img class="image" src="{{ .ImageURL }}" alt="{{ .Title }}" />
+                      </div>
+                      <div class="view-8">
+                        <div class="view-9">
+                          <h3 class="text-wrapper-5">{{ .Title }}</h3>
+                          <div class="info-details">
+                            <p class="p">
+                              <span class="span">Отн. молекулярная масса:</span>
+                              <span class="text-wrapper-6"> {{ printf "%.2f" .RelativeMolecularMass }} г/моль</span>
+                            </p>
+                            <p class="p">
+                              <span class="span">Стехиометрический коэффициент:</span>
+                              <span class="text-wrapper-6"> {{ .StoichiometricCoefficient }}</span>
+                            </p>
+                          </div>
+                        </div>
+                        <div class="background-border">
+                          <p class="text">{{ .Description }}</p>
+                        </div>
+                      </div>
+                    </div>
                     <div class="view-10">
-                      <img class="image" src="{{ .ImageURL }}" alt="{{ .Title }}" />
-                      <h2 class="text-wrapper-4">{{ .Title }}</h2>
-                    </div>
-                    <div class="view-11">
-                      <div class="mr-wrapper">
-                        <p class="mr">
-                          <span class="span">Mr:</span> <span class="text-wrapper-5"> {{ printf "%.2f" .RelativeMolecularMass }} г/моль</span>
-                        </p>
-                      </div>
-                      <div class="background-border">
-                        <p class="text">{{ .Description }}</p>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="view-12">
-                    <div class="view-13">
-                      <div class="view-14">
-                        <label for="material-{{ .MaterialID }}-mass" class="text-wrapper-2">Масса технического вещества (г):</label>
-                        <div class="view-15">
-                          <input
-                            type="number"
-                            id="material-{{ .MaterialID }}-mass"
-                            class="view-16"
-                            value="{{ printf "%.2f" .MaterialMass }}"
-                            step="0.01"
-                            min="0"
-                            aria-describedby="material-{{ .MaterialID }}-mass-desc"
-                            readonly
-                          />
+                      <div class="div-2">
+                        <div class="view-11">
+                          <div class="view-12">
+                            <div class="view-13">
+                              <input
+                                type="text"
+                                class="text-wrapper-2"
+                                value="{{ printf "%.3f" .GasVolume }}"
+                                readonly
+                                aria-label="Объем выделившегося газа для {{ .Title }}"
+                                id="material-{{ .MaterialID }}-volume"
+                              />
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                      <div class="view-14">
-                        <label for="material-{{ .MaterialID }}-volume" class="text-wrapper-2">Объем выделившегося газа (л):</label>
-                        <div class="view-15">
-                          <input
-                            type="number"
-                            id="material-{{ .MaterialID }}-volume"
-                            class="view-16"
-                            value="{{ printf "%.3f" .GasVolume }}"
-                            step="0.001"
-                            min="0"
-                            aria-describedby="material-{{ .MaterialID }}-volume-desc"
-                            readonly
-                          />
+                        <div class="view-11">
+                          <div class="view-12">
+                            <div class="view-13">
+                              <input
+                                type="text"
+                                class="text-wrapper-2"
+                                value="{{ printf "%.2f" .MaterialMass }}"
+                                readonly
+                                aria-label="Масса технического вещества для {{ .Title }}"
+                                id="material-{{ .MaterialID }}-mass"
+                              />
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    </div>
-                    <div class="view-17">
-                      <label for="material-{{ .MaterialID }}-impurity" class="text-wrapper-2"
-                        >Рассчитанная массовая доля примесей (%)</label
-                      >
-                      <div class="view-15">
-                        <input
-                          type="number"
-                          id="material-{{ .MaterialID }}-impurity"
-                          class="view-16"
-                          value="{{ printf "%.1f" .MassFractionPercentage }}"
-                          step="0.1"
-                          min="0"
-                          max="100"
-                          aria-describedby="material-{{ .MaterialID }}-impurity-desc"
-                          readonly
-                        />
+                        <div class="view-11">
+                          <div class="view-12">
+                            <div class="view-13">
+                              <input
+                                type="text"
+                                class="text-wrapper-2"
+                                value="{{ printf "%.1f" .MassFractionPercentage }}"
+                                readonly
+                                aria-label="Массовая доля примесей для {{ .Title }}"
+                                id="material-{{ .MaterialID }}-impurity"
+                              />
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </article>
                 {{ end }}
-              </section>
-            </article>
+              </div>
+            </div>
           </section>
+          <footer class="frame-5">
+            <p class="text-wrapper-7">Услуг в заявке: {{ .itemsAmount }}</p>
+          </footer>
         </main>
         <header class="header">
           <div class="container">
             <div class="chatgpt-image-wrapper">
-              <a href="/materials"><img class="chatgpt-image" src="/img/logo.png" alt="Логотип приложения" /></a>
+              <a href="/materials"><img class="chatgpt-image" src="http://localhost:9000/img/logo.png" alt="Логотип приложения" /></a>
             </div>
-            <div class="view-18"></div>
+            <div class="view-15"></div>
           </div>
         </header>
       </div>

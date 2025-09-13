@@ -1,11 +1,11 @@
 .screen {
-  background-color: #ffffff;
+  background-color: var(--white);
   display: block;
   width: 100%;
 }
 
 .screen .div {
-  background-color: #ffffff;
+  background-color: var(--white);
   width: 100%;
   min-height: calc(100vh - 76px);
   padding-top: 76px;
@@ -67,7 +67,7 @@
   margin-top: -1.00px;
   font-family: "Inter-Regular", Helvetica;
   font-weight: 400;
-  color: #1c1c1e;
+  color: var(--black);
   font-size: 39.8px;
   letter-spacing: 0;
   line-height: 52px;
@@ -99,14 +99,14 @@
 
 .screen .text-wrapper-2 {
   width: fit-content;
-  font-family: "Inter-Medium", Helvetica;
-  font-weight: 500;
+  font-family: "Inter-Bold", Helvetica;
+  font-weight: 700;
   font-size: 20px;
   line-height: 30px;
   white-space: nowrap;
   position: relative;
   margin-top: -1.00px;
-  color: #1c1c1e;
+  color: var(--black);
   letter-spacing: 0;
 }
 
@@ -118,7 +118,7 @@
   line-height: 21px;
   position: relative;
   margin: 0;
-  color: #1c1c1e;
+  color: var(--black);
   letter-spacing: 0;
 }
 
@@ -139,7 +139,7 @@
   width: 100%;
   height: 1px;
   border: 0px none;
-  background-color: #d7d7db;
+  background-color: var(--gray-border);
 }
 
 .screen .mr {
@@ -147,7 +147,7 @@
   width: fit-content;
   font-family: "Inter-Bold", Helvetica;
   font-weight: 400;
-  color: #000000;
+  color: var(--black);
   font-size: 16px;
   letter-spacing: 0;
   line-height: 22px;
@@ -207,7 +207,7 @@
   z-index: 1000;
   width: 100%;
   height: 76px;
-  background-color: #eff0f4;
+  background-color: var(--gray-header);
 }
 
 .screen .container-2 {

@@ -19,9 +19,11 @@ func NewRepository() (*Repository, error) {
 type Material struct { 
   ID    int
   Title string
+	Formula string
 	Description string
 	RelativeMolecularMass float64
 	ImageURL string
+	StoichiometricCoefficient float64
 }
 
 // Получаем все материалы
@@ -29,31 +31,39 @@ func (r *Repository) GetMaterials() ([]Material, error) {
   materials := []Material{
     {
       ID:    1,
-      Title: "Известняк (CaCO3)",
+      Title: "Известняк",
+			Formula: "CaCO3",
 			Description: "Осадочная порода, состоящая преимущественно из кальцита (карбоната кальция).",
 			RelativeMolecularMass:  100.07,
-			ImageURL: "/img/izvestnyak.jpg",
+			StoichiometricCoefficient: 1,
+			ImageURL: "http://localhost:9000/img/izvestnyak.jpg",
     },
     {
       ID:    2,
-      Title: "Мрамор (CaCO3)",
+      Title: "Мрамор",
+			Formula: "CaCO3",
 			Description: "Метаморфическая порода из кальцита, прочная, декоративная, полируемая.",
 			RelativeMolecularMass:  100.07,
-			ImageURL: "/img/mramor.jpg",
+			StoichiometricCoefficient: 1,
+			ImageURL: "http://localhost:9000/img/mramor.jpg",
     },
     {
       ID:    3,
-      Title: "Металлический цинк (Zn)",
+      Title: "Металлический цинк",
+			Formula: "Zn",
 			Description: "Голубовато-белый металл, пластичный, коррозионно-стойкий.",
 			RelativeMolecularMass:  65.39,
-			ImageURL: "/img/cink.jpg",
+			StoichiometricCoefficient: 1,
+			ImageURL: "http://localhost:9000/img/cink.jpg",
     },
 		{
       ID:    4,
-      Title: "Сода (Na2CO3)",
+      Title: "Сода",
+			Formula: "Na2CO3",
 			Description: "Белый, без запаха, водорастворимый порошок или кристаллы, представляющие собой среднюю соль угольной кислоты",
 			RelativeMolecularMass:  105.99,
-			ImageURL: "/img/soda.jpg",
+			StoichiometricCoefficient: 1,
+			ImageURL: "http://localhost:9000/img/soda.jpg",
     },
   }
   
@@ -93,59 +103,19 @@ func (r *Repository) GetMaterialsByTitle(title string) ([]Material, error) {
 	for _, material := range materials {
 		if strings.Contains(strings.ToLower(material.Title), trimmedQuery) {
 			result = append(result, material)
+		} else if strings.Contains(strings.ToLower(material.Formula), trimmedQuery) {
+			result = append(result, material)
 		}
 	}
 
 	return result, nil
 }
 
-// Кислоты
-
-type Acid struct { 
-  ID    int
-	Title string
-}
-
-// Получаем все кислоты
-func (r *Repository) GetAcids() ([]Acid, error) {
-  acids := []Acid{
-    {
-      ID:    1,
-      Title: "Хлороводородная кислота (HCl)",
-    },
-    {
-      ID:    2,
-      Title: "Серная кислота (H2SO4)",
-    },
-  }
-  
-  if len(acids) == 0 {
-    return nil, fmt.Errorf("кислоты не найдены")
-  }
-
-  return acids, nil
-}
-
-// Получаем кислоту по его id
-func (r *Repository) GetAcid(id int) (Acid, error) {
-	acids, err := r.GetAcids()
-	if err != nil {
-		return Acid{}, err
-	}
-
-	for _, acid := range acids {
-		if acid.ID == id {
-			return acid, nil
-		}
-	}
-	return Acid{}, fmt.Errorf("кислота не найдена")
-}
-
 // Заказ
 
 type Order struct {
 	ID int
-	AcidId int
+	MolarVolume float64
 }
 
 // Получаем все заказы
@@ -153,7 +123,7 @@ func (r *Repository) GetOrders() ([]Order, error) {
   orders := []Order{
 		{
 			ID: 1,
-			AcidId: 1,
+			MolarVolume: 22.4,
 		},
 	}
   
@@ -237,6 +207,16 @@ func (r *Repository) GetOrderItems(id int) ([]OrderItem, error) {
 // Получаем количество услуг добавленных во все заказы
 func (r *Repository) GetAllOrderItemsCount() (int, error) {
 	orderItems, err := r.GetAllOrderItems()
+	if err != nil {
+		return 0, err
+	}
+
+	return len(orderItems), nil
+}
+
+// Получаем количество услуг добавленных в один заказ по id заказа
+func (r *Repository) GetOrderItemsCount(orderID int) (int, error) {
+	orderItems, err := r.GetOrderItems(orderID)
 	if err != nil {
 		return 0, err
 	}

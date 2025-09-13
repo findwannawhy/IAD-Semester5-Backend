@@ -1,13 +1,13 @@
 @import url("https://cdnjs.cloudflare.com/ajax/libs/meyer-reset/2.0/reset.min.css");
 
 :root {
+  --white: #ffffff;
+  --black: #000000;
   --green: #00be6e;
   --green-border: #7df2c1;
-  --white: #ffffff;
   --gray-border: #d7d7db;
-  --gray-text: #374151;
-  --grat-soft: #73737c;
   --gray-header: #eff0f4;
+  --button-hover: #f0f0f5;
 }
 * {
   -webkit-font-smoothing: antialiased;

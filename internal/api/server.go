@@ -26,7 +26,7 @@ func StartServer() {
 	// префикс для всей статики
 	r.Static("/static", "./resources")
 	// префикс для изображений
-	r.Static("/img", "./resources/img")
+	// r.Static("/img", "./resources/img")
 
 	r.GET("/materials", handler.GetMaterials)
 	r.GET("/material/:id", handler.GetMaterial)

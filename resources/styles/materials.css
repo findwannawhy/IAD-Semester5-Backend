@@ -1,13 +1,13 @@
 /* Экран материалов: базовая обертка страницы */
 .screen {
-  background-color: #ffffff;
+  background-color: var(--white);
   display: block;
   width: 100%;
 }
 
 /* Внутренний контейнер: ширина 100% и отступ под фиксированный header */
 .screen .div {
-  background-color: #ffffff;
+  background-color: var(--white);
   width: 100%;
   min-height: calc(100vh - 76px);
   padding-top: 76px;
@@ -55,7 +55,7 @@
   align-self: stretch;
   font-family: "Inter-Bold", Helvetica;
   font-weight: 700;
-  color: #1c1c1c;
+  color: var(--black);
   font-size: 29.3px;
   text-align: center;
   line-height: 42px;
@@ -83,7 +83,7 @@
   width: 100%;
   max-width: 600px;
   height: 40px;
-  background-color: #ffffff;
+  background-color: var(--white);
   border-radius: 8px;
   overflow: hidden;
   border: 1px solid var(--gray-border);
@@ -120,7 +120,7 @@
   width: fit-content;
   font-family: "Inter-Regular", Helvetica;
   font-weight: 400;
-  color: #c7c7cc;
+  color: var(--gray-border);
   font-size: 14px;
   line-height: normal;
   position: relative;
@@ -158,7 +158,7 @@
   position: relative;
   border-radius: 20px;
   overflow: hidden;
-  border: 2px solid #d7d7db;
+  border: 2px solid var(--gray-border);
   transition: border-color 0.2s ease;
 }
 
@@ -217,7 +217,7 @@
   position: relative;
   align-self: stretch;
   margin-top: -1.00px;
-  color: #1c1c1e;
+  color: var(--black);
   text-align: center;
   letter-spacing: 0;
 }
@@ -225,7 +225,7 @@
 .screen .view-4 {
   display: flex;
   flex-direction: column;
-  height: 143px;
+  height: 100px;
   align-items: flex-start;
   position: relative;
   align-self: stretch;
@@ -241,7 +241,7 @@
   position: relative;
   align-self: stretch;
   margin-top: -1.00px;
-  color: #1c1c1e;
+  color: var(--black);
   text-align: center;
   letter-spacing: 0;
 }
@@ -256,8 +256,9 @@
 
 /* Блок цены (inline) */
 .screen .mr-wrapper {
-  display: inline-flex;
-  align-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
   gap: 10px;
   position: relative;
   flex: 0 0 auto;
@@ -266,15 +267,15 @@
 /* Цена/значение: часть текста может быть жирной через .span */
 .screen .mr {
   position: relative;
-  width: fit-content;
+  width: 100%;
   margin-top: -1.00px;
   font-family: "Inter-Bold", Helvetica;
   font-weight: 400;
-  color: #000000;
+  color: var(--black);
   font-size: 16px;
   letter-spacing: 0;
   line-height: 22px;
-  white-space: nowrap;
+  white-space: normal;
 }
 
 /* Жирная часть цены */
@@ -310,10 +311,10 @@
   padding: 11px 17px;
   position: relative;
   flex: 0 0 auto;
-  background-color: #ffffff;
+  background-color: var(--white);
   border-radius: 6px;
   border: 1px solid;
-  border-color: #00be6e;
+  border-color: var(--green);
   transition: background-color 0.25s ease-in-out;
 }
 
@@ -366,7 +367,7 @@
   border-radius: 20px;
   overflow: hidden;
   border: 2px solid;
-  border-color: #d7d7db;
+  border-color: var(--gray-border);
 }
 
 /* Ещё одно изображение карточки (вариант 4) */
@@ -389,7 +390,7 @@
   z-index: 1000;
   width: 100%;
   height: 76px;
-  background-color: #eff0f4;
+  background-color: var(--gray-header);
 }
 
 /* Контейнер содержимого в хедере */
@@ -473,9 +474,9 @@
   align-items: center;
   justify-content: center;
   border-radius: 12px;
-  background: #ffffff;
+  background: var(--white);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
-  border: 1px solid #e8e8ed;
+  border: 1px solid var(--gray-border);
 }
 
 /* Иконка внутри плавающей корзины */
@@ -496,14 +497,14 @@
   height: 22px;
   padding: 0 6px;
   border-radius: 11px;
-  background: #00be6e;
-  color: #ffffff;
+  background: var(--green);
+  color: var(--white);
   font-family: "Inter-Bold", Helvetica;
   font-weight: 700;
   font-size: 12px;
   line-height: 22px;
   text-align: center;
-  box-shadow: 0 0 0 2px #ffffff;
+  box-shadow: 0 0 0 2px var(--white);
 }
 /* Original CSS code should be injected here */
 
@@ -514,7 +515,7 @@
   outline: none;
   font-family: "Inter-Regular", Helvetica;
   font-weight: 400;
-  color: #1c1c1e;
+  color: var(--black);
   font-size: 14px;
   line-height: normal;
   width: 100%;
@@ -522,7 +523,7 @@
 }
 
 .component-2::placeholder {
-  color: #c7c7cc;
+  color: var(--gray-border);
 }
 
 .view-6 {
@@ -533,7 +534,7 @@
 }
 
 .view-6:hover {
-  background-color: #f0f0f5;
+  background-color: var(--button-hover);
 }
 
 .view-6:focus-visible {
