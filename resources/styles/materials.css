@@ -172,7 +172,7 @@
 .screen .view-3:hover .mr,
 .screen .view-3:hover .span,
 .screen .view-3:hover .text-wrapper-5 {
-  color: var(--grat-soft);
+  color: var(--gray-hover-text);
 }
 
 /* Изображение карточки (обложка материала) */
