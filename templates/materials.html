@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta charset="utf-8" />
+    <title>Вещества</title>
+    <link rel="stylesheet" href="/static/styles/globals.css" />
+    <link rel="stylesheet" href="/static/styles/materials.css" />
+    <link rel="icon" href="http://localhost:9000/img/logo-sqr.png" type="image/png" />
+  </head>
+  <body>
+    <div class="screen">
+      <div class="div">
+        <main class="body">
+          <section class="catalog">
+            <header class="view">
+              <h1 class="text-wrapper">Вещества</h1>
+            </header>
+            <div class="view-wrapper">
+              <form class="overlap-group-wrapper" action="/materials" method="get">
+                <div class="overlap-group">
+                  <div class="image-fill">
+                    <img class="component" src="http://localhost:9000/img/search.svg" alt="Поиск" />
+                  </div>
+                  <div class="container">
+                    <label for="search-input" class="text-wrapper-2">Поиск вещества...</label>
+                  </div>
+                  <div class="component-wrapper">
+                    <input
+                      type="text"
+                      id="search-input"
+                      name="material_search"
+                      class="component-2"
+                      placeholder="Поиск вещества..."
+                      aria-label="Поиск вещества"
+                      value="{{ .material_search }}"
+                    />
+                  </div>
+                </div>
+              </form>
+            </div>
+            <div class="view-2">
+              {{ range .materials }}
+              <article class="view-3">
+                <div class="img" role="img" aria-label="{{ .Title }}">
+                  <img src="{{ .ImageURL }}" alt="{{ .Title }}" />
+                </div>
+                <div class="body-2">
+                  <div class="div-wrapper">
+                    <h2 class="text-wrapper-3">{{ .Title }} ({{ .Formula }})</h2>
+                  </div>
+                  <div class="div-wrapper">
+                    <div class="view-4">
+                      <p class="text-wrapper-4">{{ .Description }}</p>
+                      <div class="frame"></div>
+                    </div>
+                  </div>
+                  <div class="mr-wrapper">
+                    <p class="mr"><span class="span">Отн. молекулярная масса:</span><br> <span class="text-wrapper-5"> {{ printf "%.2f" .RelativeMolecularMass }} г/моль</span></p>
+                    <p class="mr"><span class="span">Стехиометрический коэффициент:</span><br> <span class="text-wrapper-5"> {{ .StoichiometricCoefficient }} </span></p>
+                  </div>
+                  <div class="view-5">
+                    <a class="view-6" href="/material/{{ .ID }}" aria-label="Подробнее о {{ .Title }}">
+                      <span class="text">Подробнее</span>
+                    </a>
+                  </div>
+                </div>
+              </article>
+              {{ end }}
+            </div>
+          </section>
+        </main>
+        <header class="header">
+          <div class="container-2">
+            <div class="chatgpt-image-wrapper">
+              <a href="/materials"><img class="chatgpt-image" src="http://localhost:9000/img/logo.png" alt="Логотип" /></a>
+            </div>
+            <div class="view-8"></div>
+          </div>
+        </header>
+      </div>
+    </div>
+    <a href="/experiment/1" class="floating-cart" aria-label="Перейти в корзину">
+      <img src="http://localhost:9000/img/cart.png" alt="Корзина" />
+      <span class="cart-badge" aria-label="Количество в корзине">{{ .Count }}</span>
+    </a>
+  </body>
+</html>
