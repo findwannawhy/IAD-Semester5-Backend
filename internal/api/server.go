@@ -30,7 +30,7 @@ func StartServer() {
 
 	r.GET("/materials", handler.GetMaterials)
 	r.GET("/material/:id", handler.GetMaterial)
-	r.GET("/order/:id", handler.GetOrder)
+	r.GET("/experiment/:id", handler.GetExperiment)
 
 	r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
 	log.Println("Server down")

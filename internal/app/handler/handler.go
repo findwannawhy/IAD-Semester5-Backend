@@ -16,8 +16,8 @@ type Handler struct {
   Repository *repository.Repository
 }
 
-// View-модель для карточек заказа
-type OrderCard struct {
+// View-модель для карточек эксперимента
+type ExperimentCard struct {
   MaterialID int
   Title string
   Description string
@@ -41,36 +41,36 @@ func (h *Handler) GetMaterials(ctx *gin.Context) {
 	var materials []repository.Material
 	var err error
 
-	// Обрабатываем параметр query из url, выводим пользователю только те материалы,
+	// Обрабатываем параметр material_search из url, выводим пользователю только те материалы,
 	// которые содержат в названии то, что ввёл пользователь в поиске
-	searchQuery := ctx.Query("query")
-	if searchQuery == "" {
+	materialSearch := ctx.Query("material_search")
+	if materialSearch == "" {
 		materials, err = h.Repository.GetMaterials()
 		if err != nil {
 			logrus.Error(err)
 		}
 	} else {
-		materials, err = h.Repository.GetMaterialsByTitle(searchQuery)
+		materials, err = h.Repository.GetMaterialsByTitle(materialSearch)
 		if err != nil {
 			logrus.Error(err)
 		}
 	}
 
-	// В лаб1 у нас только один заказ, поэтому считаем все услуги всех заказов,
+	// В лаб1 у нас только один эксперимент, поэтому считаем все услуги всех экспериментов,
 	// чтобы не добавлять id в url, ведущую на каталог. Потом, когда мы сможем получать
-	// id заказа, на который будет вести корзина, мы заменим используемый метод на 
-	// GetOrderItemsCount(id int), где id - id заказа, на который будет вести корзина
-	count, err := h.Repository.GetAllOrderItemsCount()
+	// id эксперимента, на который будет вести корзина, мы заменим используемый метод на 
+	// GetExperimentItemsCount(id int), где id - id эксперимента, на который будет вести корзина
+	count, err := h.Repository.GetAllExperimentItemsCount()
 	if err != nil {
 		logrus.Error(err)
 		count = 0
 	}
 
-  // Возвращаем html шаблон, передаём в него все материалы и параметр query,
+  // Возвращаем html шаблон, передаём в него все материалы и параметр material_search,
 	// чтобы можно было сохранить введённый поиск
 	ctx.HTML(http.StatusOK, "materials.html", gin.H{
 		"materials": materials,
-		"query":  searchQuery,
+		"material_search":  materialSearch,
 		"Count": count,
 	})
 }
@@ -97,29 +97,27 @@ func (h *Handler) GetMaterial(ctx *gin.Context) {
 	})
 }
 
-// Заявка
+// Эксперимент
 
-func (h *Handler) GetOrder(ctx *gin.Context) {
-	// Получаем id заказа из url
+func (h *Handler) GetExperiment(ctx *gin.Context) {
+	// Получаем id эксперимента из url
 	idStr := ctx.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
 		logrus.Error(err)
 	}
 
-	// Получаем заказ из репозитория по id
-	order, err := h.Repository.GetOrder(id)
+	// Получаем эксперимент из репозитория по id
+	experiment, err := h.Repository.GetExperiment(id)
 	if err != nil {
 		logrus.Error(err)
 	}
 
-	itemsAmount, err := h.Repository.GetOrderItemsCount(order.ID)
-	if err != nil {
-		logrus.Error(err)
-	}
+	// Получаем список веществ, добавленных в эксперимент
+	experimentItems := experiment.ExperimentItems
 
-	// Получаем карточки, добавленные в заказ по id заказа
-	orderItems, err := h.Repository.GetOrderItems(order.ID)
+	// Получаем количество веществ, добавленных в эксперимент
+	itemsAmount, err := h.Repository.GetExperimentItemsCount(id)
 	if err != nil {
 		logrus.Error(err)
 	}
@@ -137,10 +135,10 @@ func (h *Handler) GetOrder(ctx *gin.Context) {
 	}
 
 	// Собираем карточки для шаблона
-	cards := make([]OrderCard, 0, len(orderItems))
-	for _, it := range orderItems {
+	cards := make([]ExperimentCard, 0, len(experimentItems))
+	for _, it := range experimentItems {
 		m := materialsMap[it.MaterialId]
-		cards = append(cards, OrderCard{
+		cards = append(cards, ExperimentCard{
 			MaterialID:                it.MaterialId,
 			Title:                     m.Title,
 			Description:               m.Description,
@@ -154,8 +152,8 @@ func (h *Handler) GetOrder(ctx *gin.Context) {
 	}
 
 	// Возвращаем html шаблон
-	ctx.HTML(http.StatusOK, "order.html", gin.H{
-		"order": order,
+	ctx.HTML(http.StatusOK, "experiment.html", gin.H{
+		"experiment": experiment,
 		"cards": cards,
 		"itemsAmount": itemsAmount,
 	})

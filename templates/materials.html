@@ -29,11 +29,11 @@
                     <input
                       type="text"
                       id="search-input"
-                      name="query"
+                      name="material_search"
                       class="component-2"
                       placeholder="Поиск вещества..."
                       aria-label="Поиск вещества"
-                      value="{{ .query }}"
+                      value="{{ .material_search }}"
                     />
                   </div>
                 </div>
@@ -80,7 +80,7 @@
         </header>
       </div>
     </div>
-    <a href="/order/1" class="floating-cart" aria-label="Перейти в корзину">
+    <a href="/experiment/1" class="floating-cart" aria-label="Перейти в корзину">
       <img src="http://localhost:9000/img/cart.png" alt="Корзина" />
       <span class="cart-badge" aria-label="Количество в корзине">{{ .Count }}</span>
     </a>

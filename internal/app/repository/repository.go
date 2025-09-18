@@ -111,115 +111,93 @@ func (r *Repository) GetMaterialsByTitle(title string) ([]Material, error) {
 	return result, nil
 }
 
-// Заказ
+// Эксперимент
 
-type Order struct {
+type ExperimentItem struct {
 	ID int
-	MolarVolume float64
-}
-
-// Получаем все заказы
-func (r *Repository) GetOrders() ([]Order, error) {
-  orders := []Order{
-		{
-			ID: 1,
-			MolarVolume: 22.4,
-		},
-	}
-  
-  if len(orders) == 0 {
-    return nil, fmt.Errorf("заказы не найдены")
-  }
-
-  return orders, nil
-}
-
-// Получаем заказ по его id
-func (r *Repository) GetOrder(id int) (Order, error) {
-	orders, err := r.GetOrders()
-	if err != nil {
-		return Order{}, err
-	}
-	
-	for _, order := range orders {
-		if order.ID == id {
-			return order, nil
-		}
-	}
-	return Order{}, fmt.Errorf("заказ не найден")
-}
-
-// Карточки заказов
-
-type OrderItem struct {
-	ID int
-	OrderId int
+	ExperimentId int
 	MaterialId int
 	MaterialMass float64
 	GasVolume float64
 	MassFractionPercentage float64
 }
 
-// Получаем все услуги добавленные во все заказы
-func (r *Repository) GetAllOrderItems() ([]OrderItem, error) {
-  orderItems := []OrderItem{
-    {
-      ID:    1,
-			OrderId: 1,
-      MaterialId: 1,
-      MaterialMass: 2.35,
-      GasVolume: 0.484,
-      MassFractionPercentage: 8,
-    },
-		{
-      ID:    2,
-			OrderId: 1,
-      MaterialId: 2,
-      MaterialMass: 1.8,
-      GasVolume: 0.397,
-      MassFractionPercentage: 1.5,
-    },
-  }
-  
-  if len(orderItems) == 0 {
-    return nil, fmt.Errorf("не найдено заказанных услуг")
-  }
-
-  return orderItems, nil
+type Experiment struct {
+	ID int
+	MolarVolume float64
+	ExperimentItems []ExperimentItem
 }
 
-// Получаем услуги добавленные в один заказ по id заказа
-func (r *Repository) GetOrderItems(id int) ([]OrderItem, error) {
-	orderItems, err := r.GetAllOrderItems()
-	if err != nil {
-		return []OrderItem{}, err
+// Получаем все эксперименты
+func (r *Repository) GetAllExperiments() ([]Experiment, error) {
+  experiments := []Experiment{
+		{
+			ID: 1,
+			MolarVolume: 22.4,
+			ExperimentItems: []ExperimentItem{
+				{
+					ID:    1,
+					ExperimentId: 1,
+					MaterialId: 1,
+					MaterialMass: 2.35,
+					GasVolume: 0.484,
+					MassFractionPercentage: 8,
+				},
+				{
+					ID:    2,
+					ExperimentId: 1,
+					MaterialId: 2,
+					MaterialMass: 1.8,
+					GasVolume: 0.397,
+					MassFractionPercentage: 1.5,
+				},
+			},
+		},
 	}
+  
+  if len(experiments) == 0 {
+    return nil, fmt.Errorf("эксперименты не найдены")
+  }
 
-	var result []OrderItem
-	for _, orderItem := range orderItems {
-		if orderItem.OrderId == id {
-			result = append(result, orderItem)	
+  return experiments, nil
+}
+
+// Получаем эксперимент по его id
+func (r *Repository) GetExperiment(id int) (Experiment, error) {
+	experiments, err := r.GetAllExperiments()
+	if err != nil {
+		return Experiment{}, err
+	}
+	
+	for _, experiment := range experiments {
+		if experiment.ID == id {
+			return experiment, nil
 		}
 	}
-	return result, nil
+	return Experiment{}, fmt.Errorf("эксперимент не найден")
 }
 
-// Получаем количество услуг добавленных во все заказы
-func (r *Repository) GetAllOrderItemsCount() (int, error) {
-	orderItems, err := r.GetAllOrderItems()
+// Получаем количество услуг добавленных во все эксперименты
+func (r *Repository) GetAllExperimentItemsCount() (int, error) {
+	experiments, err := r.GetAllExperiments()
 	if err != nil {
 		return 0, err
 	}
 
-	return len(orderItems), nil
+	totalItems := 0
+	for _, experiment := range experiments {
+		totalItems += len(experiment.ExperimentItems)
+	}
+
+	return totalItems, nil
 }
 
-// Получаем количество услуг добавленных в один заказ по id заказа
-func (r *Repository) GetOrderItemsCount(orderID int) (int, error) {
-	orderItems, err := r.GetOrderItems(orderID)
+// Получаем количество услуг добавленных в один эксперимент по id эксперимента
+func (r *Repository) GetExperimentItemsCount(experimentID int) (int, error) {
+	experiment, err := r.GetExperiment(experimentID)
 	if err != nil {
 		return 0, err
 	}
 
-	return len(orderItems), nil
+	return len(experiment.ExperimentItems), nil
 }

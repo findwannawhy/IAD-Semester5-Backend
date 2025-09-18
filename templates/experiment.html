@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <title>Заявки</title>
     <link rel="stylesheet" href="/static/styles/globals.css" />
-    <link rel="stylesheet" href="/static/styles/order.css" />
+    <link rel="stylesheet" href="/static/styles/experiment.css" />
     <link rel="icon" href="http://localhost:9000/img/logo-sqr.png" type="image/png" />
   </head>
   <body>
@@ -13,7 +13,7 @@
       <div class="div">
         <main class="body">
           <section class="frame">
-            <h1 class="text-wrapper">Ваша заявка:</h1>
+            <h1 class="text-wrapper">Эксперимент:</h1>
           </section>
           <section class="view">
             <div class="div-2">
@@ -27,7 +27,7 @@
                       type="text"
                       id="molar-volume"
                       class="text-wrapper-2"
-                      value="{{ printf "%.1f" .order.MolarVolume }}"
+                      value="{{ printf "%.1f" .experiment.MolarVolume }}"
                       readonly
                       aria-label="Молярный объем в литрах на моль"
                     />
@@ -136,7 +136,7 @@
             </div>
           </section>
           <footer class="frame-5">
-            <p class="text-wrapper-7">Услуг в заявке: {{ .itemsAmount }}</p>
+            <p class="text-wrapper-7">Веществ выбрано: {{ .itemsAmount }}</p>
           </footer>
         </main>
         <header class="header">
