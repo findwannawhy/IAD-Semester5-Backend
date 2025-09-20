@@ -293,8 +293,7 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
-  gap: 0px 98.24px;
+  gap: 20%;
   position: relative;
   align-self: stretch;
   width: 100%;
@@ -308,14 +307,37 @@
   min-width: 80px;
   min-height: 44px;
   align-items: center;
+  justify-content: center;
   padding: 11px 17px;
   position: relative;
-  flex: 0 0 auto;
+  flex: 1;
   background-color: var(--white);
   border-radius: 6px;
   border: 1px solid;
   border-color: var(--green);
   transition: background-color 0.25s ease-in-out;
+}
+
+.screen .view-6-filled {
+  display: inline-flex;
+  flex-direction: column;
+  min-width: 80px;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  padding: 11px 17px;
+  position: relative;
+  flex: 1;
+  background-color: var(--green);
+  border-radius: 6px;
+  border: 1px solid;
+  border-color: var(--green);
+  transition: background-color 0.25s ease-in-out;
+  cursor: pointer;
+}
+
+.screen .view-6-filled .text {
+  color: var(--white);
 }
 
 /* Текст на кнопке */
@@ -542,10 +564,30 @@
   outline-offset: 2px;
 }
 
+.view-6-filled:hover {
+  background-color: var(--button-hover);
+  border-color: var(--green);
+  
+}
+
+.view-6-filled:hover .text {
+  color: var(--green);
+}
+
 .text-wrapper-2 {
   position: absolute;
   left: -9999px;
   width: 1px;
   height: 1px;
   overflow: hidden;
+}
+
+.screen .view-5 > form {
+  flex: 1;
+  margin: 0;
+  display: flex;
+}
+
+.screen .view-5 form .view-6-filled {
+  width: 100%;
 }

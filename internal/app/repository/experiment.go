@@ -3,6 +3,7 @@ package repository
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/findwannawhy/IAD-Semester5/internal/app/ds"
 )
@@ -42,17 +43,19 @@ func (r *Repository) GetExperiment(id int) ([]ds.ItemCard, ds.Experiment, error)
 	for _, item := range experimentItems {
 		material, ok := materialsMap[item.MaterialID]
 		if ok {
-			materialMassStr := ""
-			if item.MaterialMass != nil {
-				materialMassStr = fmt.Sprintf("%.2f", *item.MaterialMass)
-			}
-			gasVolumeStr := ""
-			if item.GasVolume != nil {
-				gasVolumeStr = fmt.Sprintf("%.3f", *item.GasVolume)
-			}
 			massFractionPercentageStr := ""
 			if item.MassFractionPercentage != nil {
-				massFractionPercentageStr = fmt.Sprintf("%.1f", *item.MassFractionPercentage)
+				massFractionPercentageStr = fmt.Sprintf("%.2f", *item.MassFractionPercentage)
+			}
+
+			materialMassStr := fmt.Sprintf("%g", item.MaterialMass)
+			if !strings.Contains(materialMassStr, ".") {
+				materialMassStr += ".0"
+			}
+
+			gasVolumeStr := fmt.Sprintf("%g", item.GasVolume)
+			if !strings.Contains(gasVolumeStr, ".") {
+				gasVolumeStr += ".0"
 			}
 
 			cards = append(cards, ds.ItemCard{

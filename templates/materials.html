@@ -63,6 +63,11 @@
                     <a class="view-6" href="/material/{{ .ID }}" aria-label="Подробнее о {{ .Title }}">
                       <span class="text">Подробнее</span>
                     </a>
+                    <form method="POST" action="/material/{{ .ID }}/add-to-experiment">
+                      <button class="view-6-filled" type="submit" aria-label="Добавить {{ .Title }} в заявку">
+                        <span class="text">Добавить</span>
+                      </button>
+                    </form>
                   </div>
                 </div>
               </article>

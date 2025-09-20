@@ -25,8 +25,8 @@ type Experiment struct {
 	CreatorID    uint             `gorm:"not null;index"                                   json:"creator_id"`
 	ModeratorID *uint             `gorm:"index"                                            json:"moderator_id"`
 
-	Creator     *User             `gorm:"constraint:OnUpdate:RESTRICT,OnDelete:RESTRICT"    json:"creator"`
-	Moderator   *User             `gorm:"constraint:OnUpdate:RESTRICT,OnDelete:RESTRICT"  json:"moderator"`
+	Creator     *User             `gorm:"constraint:OnUpdate:RESTRICT,OnDelete:RESTRICT"   json:"creator"`
+	Moderator   *User             `gorm:"constraint:OnUpdate:RESTRICT,OnDelete:RESTRICT"   json:"moderator"`
 
 	// правило: у каждого пользователя не более одного эксперимента в статусе черновик
 	_ struct{} `gorm:"uniqueIndex:uid_one_draft_per_user,where:status = 'draft';"`
