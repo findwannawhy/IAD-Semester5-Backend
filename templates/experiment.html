@@ -13,7 +13,7 @@
       <div class="div">
         <main class="body">
           <section class="frame">
-            <h1 class="text-wrapper">Эксперимент:</h1>
+            <h1 class="text-wrapper">Эксперимент №{{ .experiment.ID }}</h1>
           </section>
           <section class="view">
             <div class="div-2">
@@ -57,7 +57,7 @@
                 </div>
               </div>
               <div class="view-6">
-                {{ range .cards }}
+                {{ range .experimentItems }}
                 <article class="element">
                   <div class="card-content-wrapper">
                     <div class="view-7">
@@ -91,10 +91,10 @@
                               <input
                                 type="text"
                                 class="text-wrapper-2"
-                                value="{{ printf "%.3f" .GasVolume }}"
+                                value="{{ .GasVolume }}"
                                 readonly
                                 aria-label="Объем выделившегося газа для {{ .Title }}"
-                                id="material-{{ .MaterialID }}-volume"
+                                id="item-{{ .ItemID }}-volume"
                               />
                             </div>
                           </div>
@@ -105,10 +105,10 @@
                               <input
                                 type="text"
                                 class="text-wrapper-2"
-                                value="{{ printf "%.2f" .MaterialMass }}"
+                                value="{{ .MaterialMass }}"
                                 readonly
                                 aria-label="Масса технического вещества для {{ .Title }}"
-                                id="material-{{ .MaterialID }}-mass"
+                                id="item-{{ .ItemID }}-mass"
                               />
                             </div>
                           </div>
@@ -119,10 +119,10 @@
                               <input
                                 type="text"
                                 class="text-wrapper-2"
-                                value="{{ printf "%.1f" .MassFractionPercentage }}"
+                                value="{{ .MassFractionPercentage }}"
                                 readonly
                                 aria-label="Массовая доля примесей для {{ .Title }}"
-                                id="material-{{ .MaterialID }}-impurity"
+                                id="item-{{ .ItemID }}-impurity"
                               />
                             </div>
                           </div>
@@ -136,7 +136,7 @@
             </div>
           </section>
           <footer class="frame-5">
-            <p class="text-wrapper-7">Веществ выбрано: {{ .itemsAmount }}</p>
+            <p class="text-wrapper-7">Веществ выбрано: {{ .count }}</p>
           </footer>
         </main>
         <header class="header">

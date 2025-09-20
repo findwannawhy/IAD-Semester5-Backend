@@ -57,6 +57,24 @@ services:
       - minio3
       - minio4
 
+  postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mypassword
+      POSTGRES_DB: mydb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  adminer:
+    image: adminer:latest
+    ports:
+      - "8081:8081"
+    depends_on:
+      - postgres
+
 volumes:
   data1-1:
   data1-2:
@@ -66,3 +84,4 @@ volumes:
   data3-2:
   data4-1:
   data4-2:
+  postgres_data:

@@ -80,9 +80,9 @@
         </header>
       </div>
     </div>
-    <a href="/experiment/1" class="floating-cart" aria-label="Перейти в корзину">
+    <a href="/experiment/{{ .experimentId }}" class="floating-cart" aria-label="Перейти в корзину">
       <img src="http://localhost:9000/img/cart.png" alt="Корзина" />
-      <span class="cart-badge" aria-label="Количество в корзине">{{ .Count }}</span>
+      <span class="cart-badge" aria-label="Количество в корзине">{{ .count }}</span>
     </a>
   </body>
 </html>
