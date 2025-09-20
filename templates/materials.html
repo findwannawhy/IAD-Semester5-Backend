@@ -85,7 +85,7 @@
         </header>
       </div>
     </div>
-    <a href="/experiment/{{ .experimentId }}" class="floating-cart" aria-label="Перейти в корзину">
+    <a {{if gt .count 0}}href="/experiment/{{ .experimentId }}"{{end}} class="floating-cart {{if eq .count 0}}inactive{{end}}" aria-label="{{if gt .count 0}}Перейти в корзину{{else}}Корзина пуста{{end}}">
       <img src="http://localhost:9000/img/cart.png" alt="Корзина" />
       <span class="cart-badge" aria-label="Количество в корзине">{{ .count }}</span>
     </a>

@@ -21,7 +21,7 @@ func (r *Repository) GetExperiment(id int) ([]ds.ItemCard, ds.Experiment, error)
 	} else if creatorID != int(experiment.CreatorID) {
 		return []ds.ItemCard{}, ds.Experiment{}, errors.New("you are not allowed")
 	} else if experiment.Status == ds.StatusDeleted {
-		return []ds.ItemCard{}, ds.Experiment{}, errors.New("you can`t watch deleted calculations")
+		return []ds.ItemCard{}, ds.Experiment{}, errors.New("you can`t watch deleted experiment")
 	}
 
 	var experimentItems []ds.ExperimentItem

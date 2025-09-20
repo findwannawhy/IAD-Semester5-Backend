@@ -591,3 +591,8 @@
 .screen .view-5 form .view-6-filled {
   width: 100%;
 }
+
+.floating-cart.inactive {
+  opacity: 0.6;
+  cursor: default;
+}
