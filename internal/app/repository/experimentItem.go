@@ -7,7 +7,7 @@ import (
 
 // GetCartCount для получения количества услуг в заявке (чатов в сообщении в моем случае)
 func (r *Repository) GetExperimentItemsCount() int64 {
-	var experimentID int
+	var experimentID uint
 	var count int64
 	creatorID := 1
 

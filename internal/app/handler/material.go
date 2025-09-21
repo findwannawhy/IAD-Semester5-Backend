@@ -47,7 +47,7 @@ func (h *Handler) AddMaterialToExperiment(ctx *gin.Context) {
 		return
 	}
 
-	err = h.Repository.AddMaterialToExperiment(experimentId, materialId)
+	err = h.Repository.AddMaterialToExperiment(experimentId, uint(materialId))
 	if err != nil {
 		h.errorHandler(ctx, http.StatusInternalServerError, err)
 		return

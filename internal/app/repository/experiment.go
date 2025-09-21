@@ -34,7 +34,7 @@ func (r *Repository) GetExperiment(id int) ([]ds.ItemCard, ds.Experiment, error)
 
 
 	var cards []ds.ItemCard
-	materialsMap := make(map[int]ds.Material)
+	materialsMap := make(map[uint]ds.Material)
 
 	for _, material := range materials {
 		materialsMap[material.ID] = material
@@ -92,7 +92,7 @@ func (r *Repository) GetExperimentDraft(creatorID int) (ds.Experiment, error) {
 	experiment, err := r.CheckCurrentExperimentDraft(creatorID)
 	if err == errNoDraft {
 		experiment = ds.Experiment{
-			CreatorID: creatorID,
+			CreatorID: uint(creatorID),
 			Status: ds.StatusDraft,
 		}
 		res := r.db.Create(&experiment)
