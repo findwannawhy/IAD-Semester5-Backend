@@ -32,7 +32,7 @@ func (r *Repository) SearchMaterials(materialSearch string) ([]ds.Material, erro
 	return materials, nil
 }
 
-func (r *Repository) AddMaterialToExperiment(experimentId uint, materialId uint) error {
+func (r *Repository) AddMaterialToExperiment(experimentId int, materialId int) error {
 	var material ds.Material
 	if err := r.db.First(&material, materialId).Error; err != nil {
 		return err

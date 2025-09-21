@@ -1,7 +1,7 @@
 package ds
 
 type ItemCard struct {
-	ItemID                     uint
+	ItemID                     int
 	Title                      string
 	Description               *string
 	ImageURL                  *string
