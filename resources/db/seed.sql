@@ -1,16 +1,16 @@
 -- Users
-INSERT INTO users (id, login, password, is_moderator, created_at, updated_at) VALUES
-(1, 'ivan_ivanov', 'password123', false, NOW(), NOW()),
-(2, 'petr_petrov', 'password123', true, NOW(), NOW()),
-(3, 'anna_sidorova', 'password123', false, NOW(), NOW())
+INSERT INTO users (id, login, password, is_moderator) VALUES
+(1, 'ivan_ivanov', 'password123', false),
+(2, 'petr_petrov', 'password123', true),
+(3, 'anna_sidorova', 'password123', false)
 ON CONFLICT (id) DO NOTHING;
 
 -- Materials
-INSERT INTO materials (id, title, formula, description, relative_molecular_mass, stoichiometric_coefficient, image_url, created_at, updated_at) VALUES
-(1, 'Известняк', 'CaCO3', 'Осадочная порода, состоящая преимущественно из кальцита (карбоната кальция).', 100.07, 1, 'izvestnyak.jpg', NOW(), NOW()),
-(2, 'Мрамор', 'CaCO3', 'Метаморфическая порода из кальцита, прочная, декоративная, полируемая.', 100.07, 1, 'mramor.jpg', NOW(), NOW()),
-(3, 'Металлический цинк', 'Zn', 'Голубовато-белый металл, пластичный, коррозионно-стойкий.', 65.39, 1, 'cink.jpg', NOW(), NOW()),
-(4, 'Сода', 'Na2CO3', 'Белый, без запаха, водорастворимый порошок или кристаллы, представляющие собой среднюю соль угольной кислоты', 105.99, 1, 'soda.jpg', NOW(), NOW())
+INSERT INTO materials (id, title, formula, description, relative_molecular_mass, stoichiometric_coefficient, image_url) VALUES
+(1, 'Известняк', 'CaCO3', 'Осадочная порода, состоящая преимущественно из кальцита (карбоната кальция).', 100.07, 1, 'izvestnyak.jpg'),
+(2, 'Мрамор', 'CaCO3', 'Метаморфическая порода из кальцита, прочная, декоративная, полируемая.', 100.07, 1, 'mramor.jpg'),
+(3, 'Металлический цинк', 'Zn', 'Голубовато-белый металл, пластичный, коррозионно-стойкий.', 65.39, 1, 'cink.jpg'),
+(4, 'Сода', 'Na2CO3', 'Белый, без запаха, водорастворимый порошок или кристаллы, представляющие собой среднюю соль угольной кислоты', 105.99, 1, 'soda.jpg')
 ON CONFLICT (id) DO NOTHING;
 
 -- Experiments
