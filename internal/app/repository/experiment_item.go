@@ -1,25 +1,39 @@
 package repository
 
 import (
+	"errors"
+	"fmt"
+
 	"github.com/findwannawhy/IAD-Semester5/internal/app/ds"
-	"github.com/sirupsen/logrus"
+
+	"gorm.io/gorm"
 )
 
-// GetCartCount для получения количества услуг в заявке (чатов в сообщении в моем случае)
-func (r *Repository) GetExperimentItemsCount() int64 {
-	var experimentID uint
-	var count int64
-	creatorID := 1
-
-	err := r.db.Model(&ds.Experiment{}).Where("creator_id = ? AND status = ?", creatorID, ds.StatusDraft).Select("id").First(&experimentID).Error
+func (r *Repository) DeleteItemFromExperiment(experimentId uint, materialId uint) (ds.Experiment, error) {
+	var dbExperiment ds.Experiment
+	err := r.db.Where("id = ?", experimentId).First(&dbExperiment).Error
 	if err != nil {
-		 return 0
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ds.Experiment{}, fmt.Errorf("%w: исследование с id %d", ErrNotFound, experimentId)
+		}
+		return ds.Experiment{}, err
 	}
 
-	err = r.db.Model(&ds.ExperimentItem{}).Where("experiment_id = ?", experimentID).Count(&count).Error
+	err = r.db.Where("material_id = ? and experiment_id = ?", materialId, experimentId).Delete(&ds.ExperimentItem{}).Error
 	if err != nil {
-		 logrus.Println("Error counting records in lists_experiment_items:", err)
+		return ds.Experiment{}, err
 	}
+	return dbExperiment, nil
+}
 
-	return count
+func (r *Repository) ChangeExperimentItem(experimentId uint, materialId uint, ExperimentItem ds.ExperimentItem) (ds.ExperimentItem, error) {
+	var experimentItem ds.ExperimentItem
+	err := r.db.Model(&experimentItem).Where("material_id = ? and experiment_id = ?", materialId, experimentId).Updates(experimentItem).First(&experimentItem).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ds.ExperimentItem{}, fmt.Errorf("%w: материал в эксперименте", ErrNotFound)
+		}
+		return ds.ExperimentItem{}, err
+	}
+	return experimentItem, nil
 }
