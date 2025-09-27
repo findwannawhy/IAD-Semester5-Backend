@@ -31,3 +31,9 @@ type Experiment struct {
 	// правило: у каждого пользователя не более одного эксперимента в статусе черновик
 	_ struct{} `gorm:"uniqueIndex:uid_one_draft_per_user,where:status = 'draft';"`
 }
+
+type ExperimentWithLogins struct {
+	Experiment
+	CreatorLogin   string `json:"creator_login"`
+	ModeratorLogin string `json:"moderator_login"`
+}

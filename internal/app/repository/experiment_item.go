@@ -26,7 +26,7 @@ func (r *Repository) DeleteItemFromExperiment(experimentId uint, materialId uint
 	return dbExperiment, nil
 }
 
-func (r *Repository) ChangeExperimentItem(experimentId uint, materialId uint, ExperimentItem ds.ExperimentItem) (ds.ExperimentItem, error) {
+func (r *Repository) UpdateExperimentItem(experimentId uint, materialId uint, ExperimentItem ds.ExperimentItem) (ds.ExperimentItem, error) {
 	var experimentItem ds.ExperimentItem
 	err := r.db.Model(&experimentItem).Where("material_id = ? and experiment_id = ?", materialId, experimentId).Updates(experimentItem).First(&experimentItem).Error
 	if err != nil {

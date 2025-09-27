@@ -22,7 +22,7 @@ func (h *Handler) RegisterHandler(router *gin.Engine) {
 	router.GET("/materials", h.GetMaterials)
 	router.GET("/material/:id", h.GetMaterial)
 	router.POST("/material/create-material", h.CreateMaterial)
-	router.DELETE("/material/:id/soft-delete", h.SoftDeleteMaterial)
+	router.DELETE("/material/:id/soft-delete", h.DeleteMaterial)
 	router.PUT("/material/:id/change-material", h.ChangeMaterial)
 	router.POST("/material/:id/add-to-experiment", h.AddMaterialToExperiment)
 	router.POST("/material/:id/create-image", h.UploadImage)
@@ -33,10 +33,10 @@ func (h *Handler) RegisterHandler(router *gin.Engine) {
 	router.PUT("/experiment/:id/change-experiment", h.ChangeExperiment)
 	router.PUT("/experiment/:id/form", h.FormExperiment)
 	router.PUT("/experiment/:id/finish", h.ModerateExperiment)
-	router.POST("/experiment/:id/soft-delete", h.SoftDeleteExperiment)
+	router.POST("/experiment/:id/soft-delete", h.DeleteExperiment)
 
-	router.DELETE("/experiment_items/:material_id/:experiment_id", h.DeleteExperimentItem)
-	router.PUT("/experiment_items/:material_id/:experiment_id", h.ChangeExperimentItem)
+	router.DELETE("/experiment_item/:material_id/:experiment_id", h.DeleteItemFromExperiment)
+	router.PUT("/experiment_item/:material_id/:experiment_id", h.UpdateExperimentItem)
 
 	router.POST("/user/sign-up", h.CreateUser)
 	router.GET("/user/profile", h.GetProfile)
