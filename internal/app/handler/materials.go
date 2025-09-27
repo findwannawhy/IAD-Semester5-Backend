@@ -38,17 +38,12 @@ func (h *Handler) GetMaterials(ctx *gin.Context) {
 			return
 		}
 	}
-	currentExperiment, err := h.Repository.GetExperimentDraft(creatorID)
-	experimentId := int(currentExperiment.ID)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"error": err.Error(),
-		})
-	}
+	currentExperiment, _ := h.Repository.CheckCurrentExperimentDraft(creatorID)
+
 	ctx.HTML(http.StatusOK, "materials.html", gin.H{
 		"materials":       materials,
 		"count":           h.Repository.GetExperimentItemsCount(),
 		"material_search": materialSearch,
-		"experimentId":    experimentId,
+		"experimentId":    int(currentExperiment.ID),
 	})
 }
