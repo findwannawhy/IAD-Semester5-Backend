@@ -16,7 +16,7 @@ const (
 
 type Experiment struct {
   ID           uint             `gorm:"primaryKey"                                       json:"id"`
-	MolarVolume  float64          `gorm:"type:double precision;default:22.4"                                     json:"molar_volume"`
+	MolarVolume  float64          `gorm:"type:double precision;default:22.4"               json:"molar_volume"`
 	Status       ExperimentStatus `gorm:"type:varchar(16);not null;default:'draft';index"  json:"status"`
 	CreatedAt    time.Time        `gorm:"<-:create;not null;index"                         json:"created_at"`            
 	FormedAt    *time.Time        `gorm:""                                                 json:"formed_at"`   // «дата формирования» (действие создателя)
