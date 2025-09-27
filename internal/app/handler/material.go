@@ -30,11 +30,10 @@ func (h *Handler) GetMaterials(ctx *gin.Context) {
 			return
 		}
 	}
-	resp := make([]ds.Material, 0, len(materials))
-	for _, material := range materials {
-		resp = append(resp, material)
+	if materials == nil {
+		materials = make([]ds.Material, 0)
 	}
-	ctx.JSON(http.StatusOK, resp)
+	ctx.JSON(http.StatusOK, materials)
 }
 
 func (h *Handler) GetMaterial(ctx *gin.Context) {
