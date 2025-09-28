@@ -61,7 +61,7 @@ func (r *Repository) CreateMaterial(material ds.Material) (ds.Material, error) {
 	return material, nil
 }
 
-func (r *Repository) ChangeMaterial(id uint, material ds.Material) (ds.Material, error) {
+func (r *Repository) UpdateMaterial(id uint, material ds.Material) (ds.Material, error) {
 	dbMaterial := ds.Material{}
 	err := r.db.Where("id = ? and deleted = ?", id, false).First(&dbMaterial).Error
 	if err != nil {
@@ -83,7 +83,7 @@ func (r *Repository) ChangeMaterial(id uint, material ds.Material) (ds.Material,
 	return dbMaterial, nil
 }
 
-func (r *Repository) DeleteMaterial(id uint) error {
+func (r *Repository) SoftDeleteMaterial(id uint) error {
 	material := ds.Material{}
 
 	err := r.db.Where("id = ? and deleted = ?", id, false).First(&material).Error
@@ -159,7 +159,7 @@ func (r *Repository) GetModeratorAndCreatorLogin(experiment ds.Experiment) (stri
 	return creator.Login, moderatorLogin, nil
 }
 
-func (r *Repository) UploadImage(ctx *gin.Context, materialId uint, file *multipart.FileHeader) (ds.Material, error) {
+func (r *Repository) UpdateImage(ctx *gin.Context, materialId uint, file *multipart.FileHeader) (ds.Material, error) {
 	material_, err := r.GetMaterial(materialId)
 	if err != nil {
 		return ds.Material{}, err

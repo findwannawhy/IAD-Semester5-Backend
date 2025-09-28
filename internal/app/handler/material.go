@@ -74,7 +74,7 @@ func (h *Handler) CreateMaterial(ctx *gin.Context) {
 	ctx.JSON(http.StatusCreated, material)
 }
 
-func (h *Handler) DeleteMaterial(ctx *gin.Context) {
+func (h *Handler) SoftDeleteMaterial(ctx *gin.Context) {
 	idStr := ctx.Param("id")
 	id64, err := strconv.ParseUint(idStr, 10, 64)
 	if err != nil {
@@ -83,7 +83,7 @@ func (h *Handler) DeleteMaterial(ctx *gin.Context) {
 	}
 	id := uint(id64)
 
-	err = h.Repository.DeleteMaterial(id)
+	err = h.Repository.SoftDeleteMaterial(id)
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			h.errorHandler(ctx, http.StatusNotFound, err)
@@ -98,7 +98,7 @@ func (h *Handler) DeleteMaterial(ctx *gin.Context) {
 	})
 }
 
-func (h *Handler) ChangeMaterial(ctx *gin.Context) {
+func (h *Handler) UpdateMaterial(ctx *gin.Context) {
 	var materialJSON ds.Material
 	if err := ctx.BindJSON(&materialJSON); err != nil {
 		h.errorHandler(ctx, http.StatusBadRequest, err)
@@ -112,7 +112,7 @@ func (h *Handler) ChangeMaterial(ctx *gin.Context) {
 	}
 	id := uint(id64)
 
-	material, err := h.Repository.ChangeMaterial(id, materialJSON)
+	material, err := h.Repository.UpdateMaterial(id, materialJSON)
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			h.errorHandler(ctx, http.StatusNotFound, err)
@@ -126,7 +126,13 @@ func (h *Handler) ChangeMaterial(ctx *gin.Context) {
 }
 
 func (h *Handler) AddMaterialToExperiment(ctx *gin.Context) {
-	experiment, created, err := h.Repository.GetExperimentDraft(h.Repository.GetUserID())
+	userID := h.Repository.GetUserID()
+	if userID == 0 {
+		h.errorHandler(ctx, http.StatusUnauthorized, errors.New("user not authenticated"))
+		return
+	}
+
+	experiment, created, err := h.Repository.GetExperimentDraft(userID)
 	if err != nil {
 		h.errorHandler(ctx, http.StatusInternalServerError, err)
 		return
@@ -172,7 +178,7 @@ func (h *Handler) AddMaterialToExperiment(ctx *gin.Context) {
 	})
 }
 
-func (h *Handler) UploadImage(ctx *gin.Context) {
+func (h *Handler) UpdateImage(ctx *gin.Context) {
 	materialId64, err := strconv.ParseUint(ctx.Param("id"), 10, 64)
 	if err != nil {
 		h.errorHandler(ctx, http.StatusBadRequest, err)
@@ -186,7 +192,7 @@ func (h *Handler) UploadImage(ctx *gin.Context) {
 		return
 	}
 
-	material, err := h.Repository.UploadImage(ctx, materialId, file)
+	material, err := h.Repository.UpdateImage(ctx, materialId, file)
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			h.errorHandler(ctx, http.StatusNotFound, err)

@@ -49,9 +49,8 @@ func (h *Handler) DeleteItemFromExperiment(ctx *gin.Context) {
 }
 
 type updateExperimentItemRequest struct {
-	MaterialMass           *float64 `json:"material_mass"`
-	GasVolume              *float64 `json:"gas_volume"`
-	MassFractionPercentage *float64 `json:"mass_fraction_percentage"`
+	MaterialMass *float64 `json:"material_mass"`
+	GasVolume    *float64 `json:"gas_volume"`
 }
 
 func (h *Handler) UpdateExperimentItem(ctx *gin.Context) {
@@ -73,14 +72,18 @@ func (h *Handler) UpdateExperimentItem(ctx *gin.Context) {
 		return
 	}
 
+	updateData := ds.ExperimentItem{}
+	if req.MaterialMass != nil {
+		updateData.MaterialMass = *req.MaterialMass
+	}
+	if req.GasVolume != nil {
+		updateData.GasVolume = *req.GasVolume
+	}
+
 	experimentItem, err := h.Repository.UpdateExperimentItem(
 		uint(experimentID),
 		uint(materialID),
-		ds.ExperimentItem{
-			MaterialMass:           *req.MaterialMass,
-			GasVolume:              *req.GasVolume,
-			MassFractionPercentage: req.MassFractionPercentage,
-		},
+		updateData,
 	)
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {

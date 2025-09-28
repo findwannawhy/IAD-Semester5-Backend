@@ -170,7 +170,7 @@ func (r *Repository) FormExperiment(experimentId uint, status string) (ds.Experi
 	return experiment, nil
 }
 
-func (r *Repository) ChangeExperiment(id uint, experiment ds.Experiment) (ds.Experiment, error) {
+func (r *Repository) UpdateExperiment(id uint, experiment ds.Experiment) (ds.Experiment, error) {
 	dbExperiment := ds.Experiment{}
 
 	if experiment.MolarVolume <= 0 {

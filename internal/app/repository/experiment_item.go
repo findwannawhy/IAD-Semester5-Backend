@@ -28,7 +28,7 @@ func (r *Repository) DeleteItemFromExperiment(experimentId uint, materialId uint
 
 func (r *Repository) UpdateExperimentItem(experimentId uint, materialId uint, ExperimentItem ds.ExperimentItem) (ds.ExperimentItem, error) {
 	var experimentItem ds.ExperimentItem
-	err := r.db.Model(&experimentItem).Where("material_id = ? and experiment_id = ?", materialId, experimentId).Updates(experimentItem).First(&experimentItem).Error
+	err := r.db.Model(&experimentItem).Where("material_id = ? and experiment_id = ?", materialId, experimentId).Updates(ExperimentItem).First(&experimentItem).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return ds.ExperimentItem{}, fmt.Errorf("%w: материал в эксперименте", ErrNotFound)

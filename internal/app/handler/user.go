@@ -95,7 +95,7 @@ func (h *Handler) GetProfile(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, user)
 }
 
-func (h *Handler) ChangeProfile(ctx *gin.Context) {
+func (h *Handler) UpdateProfile(ctx *gin.Context) {
 	userID := h.Repository.GetUserID()
 	if userID == 0 {
 		h.errorHandler(ctx, http.StatusUnauthorized, fmt.Errorf("user not authenticated"))
@@ -108,7 +108,7 @@ func (h *Handler) ChangeProfile(ctx *gin.Context) {
 		return
 	}
 
-	user, err := h.Repository.ChangeProfile(userID, userJSON)
+	user, err := h.Repository.UpdateProfile(userID, userJSON)
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			h.errorHandler(ctx, http.StatusNotFound, err)

@@ -162,7 +162,7 @@ func (h *Handler) FormExperiment(ctx *gin.Context) {
 	})
 }
 
-func (h *Handler) ChangeExperiment(ctx *gin.Context) {
+func (h *Handler) UpdateExperiment(ctx *gin.Context) {
 	idStr := ctx.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 64)
 	if err != nil {
@@ -176,7 +176,7 @@ func (h *Handler) ChangeExperiment(ctx *gin.Context) {
 		return
 	}
 
-	experiment, err := h.Repository.ChangeExperiment(uint(id), experimentJSON)
+	experiment, err := h.Repository.UpdateExperiment(uint(id), experimentJSON)
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			h.errorHandler(ctx, http.StatusNotFound, err)
@@ -199,7 +199,7 @@ func (h *Handler) ChangeExperiment(ctx *gin.Context) {
 	})
 }
 
-func (h *Handler) DeleteExperiment(ctx *gin.Context) {
+func (h *Handler) SoftDeleteExperiment(ctx *gin.Context) {
 	idStr := ctx.Param("id")
 	experimentId, err := strconv.ParseUint(idStr, 10, 64)
 	if err != nil {

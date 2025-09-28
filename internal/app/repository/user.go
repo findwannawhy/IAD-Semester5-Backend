@@ -92,7 +92,7 @@ func (r *Repository) SignIn(user ds.User) (ds.User, error) {
 	return dbUser, nil
 }
 
-func (r *Repository) ChangeProfile(id uint, updates ds.User) (ds.User, error) {
+func (r *Repository) UpdateProfile(id uint, updates ds.User) (ds.User, error) {
 	if id <= 0 {
 		return ds.User{}, fmt.Errorf("неверный id пользователя")
 	}
