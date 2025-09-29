@@ -35,8 +35,8 @@ func (h *Handler) RegisterHandler(router *gin.Engine) {
 	router.PUT("/api/experiments/:id/moderation", h.ModerateExperiment) // поменять статус эксперимента (moderator)
 	router.DELETE("/api/experiments/:id", h.SoftDeleteExperiment) // удалить эксперимент (soft)
 
-	router.DELETE("/api/experiments/:experiment_id/materials/:material_id", h.DeleteItemFromExperiment) // удалить материал из эксперимента
-	router.PUT("/api/experiments/:experiment_id/materials/:material_id", h.UpdateExperimentItem) // обновить позицию материала в эксперименте
+	router.DELETE("/api/experiments/:id/materials/:material_id", h.DeleteItemFromExperiment) // удалить материал из эксперимента
+	router.PUT("/api/experiments/:id/materials/:material_id", h.UpdateExperimentItem) // обновить позицию материала в эксперименте
 
 	router.POST("/api/users", h.CreateUser) // регистрация пользователя
 	router.GET("/api/users/me", h.GetProfile) // профиль текущего пользователя

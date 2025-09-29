@@ -11,7 +11,7 @@ import (
 )
 
 func (h *Handler) DeleteItemFromExperiment(ctx *gin.Context) {
-	experimentID, err := strconv.Atoi(ctx.Param("experiment_id"))
+  experimentID, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
 		h.errorHandler(ctx, http.StatusBadRequest, err)
 		return
@@ -54,7 +54,7 @@ type updateExperimentItemRequest struct {
 }
 
 func (h *Handler) UpdateExperimentItem(ctx *gin.Context) {
-	experimentID, err := strconv.Atoi(ctx.Param("experiment_id"))
+  experimentID, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
 		h.errorHandler(ctx, http.StatusBadRequest, err)
 		return
