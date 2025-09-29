@@ -41,8 +41,8 @@ func (h *Handler) RegisterHandler(router *gin.Engine) {
 	router.POST("/api/users", h.CreateUser) // регистрация пользователя
 	router.GET("/api/users/me", h.GetProfile) // профиль текущего пользователя
 	router.PUT("/api/users/me", h.UpdateProfile) // обновить профиль
-	router.POST("/api/auth/login", h.SignIn) // вход в систему
-	router.POST("/api/auth/logout", h.SignOut) // выход из системы
+	router.POST("/api/users/login", h.SignIn) // вход в систему
+	router.POST("/api/users/logout", h.SignOut) // выход из системы
 }
 
 func (h *Handler) RegisterStatic(router *gin.Engine) {
