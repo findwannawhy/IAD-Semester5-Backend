@@ -19,30 +19,30 @@ func NewHandler(r *repository.Repository) *Handler {
 }
 
 func (h *Handler) RegisterHandler(router *gin.Engine) {
-	router.GET("/api/materials", h.GetMaterials)
-	router.GET("/api/material/:id", h.GetMaterial)
-	router.POST("/api/material/create-material", h.CreateMaterial)
-	router.DELETE("/api/material/:id/soft-delete", h.SoftDeleteMaterial)
-	router.PUT("/api/material/:id/update-material", h.UpdateMaterial)
-	router.POST("/api/material/:id/add-to-cart", h.AddMaterialToExperiment)
-	router.POST("/api/material/:id/update-image", h.UpdateImage)
+	router.GET("/api/materials", h.GetMaterials) // список материалов
+	router.GET("/api/materials/:id", h.GetMaterial) // получить материал по id
+	router.POST("/api/materials", h.CreateMaterial) // создать материал
+	router.DELETE("/api/materials/:id", h.SoftDeleteMaterial) // удалить материал (soft)
+	router.PUT("/api/materials/:id", h.UpdateMaterial) // обновить материал
+	router.POST("/api/materials/:id/draft", h.AddMaterialToExperiment) // добавить материал в корзину
+	router.POST("/api/materials/:id/image", h.UpdateImage) // обновить изображение материала
 
-	router.GET("/api/experiment/cart", h.GetExperimentCart)	
-	router.GET("/api/experiments", h.GetExperiments)
-	router.GET("/api/experiment/:id", h.GetExperiment)
-	router.PUT("/api/experiment/:id/update-experiment", h.UpdateExperiment)
-	router.PUT("/api/experiment/:id/form", h.FormExperiment)
-	router.PUT("/api/experiment/:id/moderate", h.ModerateExperiment)
-	router.DELETE("/api/experiment/:id/soft-delete", h.SoftDeleteExperiment)
+	router.GET("/api/experiments/draft", h.GetExperimentCart)	// текущий черновик пользователя
+	router.GET("/api/experiments", h.GetExperiments) // список экспериментов
+	router.GET("/api/experiments/:id", h.GetExperiment) // получить эксперимент по id
+	router.PUT("/api/experiments/:id", h.UpdateExperiment) // обновить эксперимент
+	router.PUT("/api/experiments/:id/form", h.FormExperiment) // поменять статус эксперимента (user)
+	router.PUT("/api/experiments/:id/moderation", h.ModerateExperiment) // поменять статус эксперимента (moderator)
+	router.DELETE("/api/experiments/:id", h.SoftDeleteExperiment) // удалить эксперимент (soft)
 
-	router.DELETE("/api/experiment_item/:material_id/:experiment_id", h.DeleteItemFromExperiment)
-	router.PUT("/api/experiment_item/:material_id/:experiment_id", h.UpdateExperimentItem)
+	router.DELETE("/api/experiments/:experiment_id/materials/:material_id", h.DeleteItemFromExperiment) // удалить материал из эксперимента
+	router.PUT("/api/experiments/:experiment_id/materials/:material_id", h.UpdateExperimentItem) // обновить позицию материала в эксперименте
 
-	router.POST("/api/user/sign-up", h.CreateUser)
-	router.GET("/api/user/profile", h.GetProfile)
-	router.PUT("/api/user/profile", h.UpdateProfile)
-	router.POST("/api/user/sign-in", h.SignIn)
-	router.POST("/api/user/sign-out", h.SignOut)
+	router.POST("/api/users", h.CreateUser) // регистрация пользователя
+	router.GET("/api/users/me", h.GetProfile) // профиль текущего пользователя
+	router.PUT("/api/users/me", h.UpdateProfile) // обновить профиль
+	router.POST("/api/auth/login", h.SignIn) // вход в систему
+	router.POST("/api/auth/logout", h.SignOut) // выход из системы
 }
 
 func (h *Handler) RegisterStatic(router *gin.Engine) {
