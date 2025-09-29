@@ -19,30 +19,30 @@ func NewHandler(r *repository.Repository) *Handler {
 }
 
 func (h *Handler) RegisterHandler(router *gin.Engine) {
-	router.GET("/materials", h.GetMaterials)
-	router.GET("/material/:id", h.GetMaterial)
-	router.POST("/material/create-material", h.CreateMaterial)
-	router.DELETE("/material/:id/soft-delete", h.SoftDeleteMaterial)
-	router.PUT("/material/:id/update-material", h.UpdateMaterial)
-	router.POST("/material/:id/add-to-cart", h.AddMaterialToExperiment)
-	router.POST("/material/:id/update-image", h.UpdateImage)
+	router.GET("/api/materials", h.GetMaterials)
+	router.GET("/api/material/:id", h.GetMaterial)
+	router.POST("/api/material/create-material", h.CreateMaterial)
+	router.DELETE("/api/material/:id/soft-delete", h.SoftDeleteMaterial)
+	router.PUT("/api/material/:id/update-material", h.UpdateMaterial)
+	router.POST("/api/material/:id/add-to-cart", h.AddMaterialToExperiment)
+	router.POST("/api/material/:id/update-image", h.UpdateImage)
 
-	router.GET("/experiment/cart", h.GetExperimentCart)	
-	router.GET("/experiments", h.GetExperiments)
-	router.GET("/experiment/:id", h.GetExperiment)
-	router.PUT("/experiment/:id/update-experiment", h.UpdateExperiment)
-	router.PUT("/experiment/:id/form", h.FormExperiment)
-	router.PUT("/experiment/:id/moderate", h.ModerateExperiment)
-	router.DELETE("/experiment/:id/soft-delete", h.SoftDeleteExperiment)
+	router.GET("/api/experiment/cart", h.GetExperimentCart)	
+	router.GET("/api/experiments", h.GetExperiments)
+	router.GET("/api/experiment/:id", h.GetExperiment)
+	router.PUT("/api/experiment/:id/update-experiment", h.UpdateExperiment)
+	router.PUT("/api/experiment/:id/form", h.FormExperiment)
+	router.PUT("/api/experiment/:id/moderate", h.ModerateExperiment)
+	router.DELETE("/api/experiment/:id/soft-delete", h.SoftDeleteExperiment)
 
-	router.DELETE("/experiment_item/:material_id/:experiment_id", h.DeleteItemFromExperiment)
-	router.PUT("/experiment_item/:material_id/:experiment_id", h.UpdateExperimentItem)
+	router.DELETE("/api/experiment_item/:material_id/:experiment_id", h.DeleteItemFromExperiment)
+	router.PUT("/api/experiment_item/:material_id/:experiment_id", h.UpdateExperimentItem)
 
-	router.POST("/user/sign-up", h.CreateUser)
-	router.GET("/user/profile", h.GetProfile)
-	router.PUT("/user/profile", h.UpdateProfile)
-	router.POST("/user/sign-in", h.SignIn)
-	router.POST("/user/sign-out", h.SignOut)
+	router.POST("/api/user/sign-up", h.CreateUser)
+	router.GET("/api/user/profile", h.GetProfile)
+	router.PUT("/api/user/profile", h.UpdateProfile)
+	router.POST("/api/user/sign-in", h.SignIn)
+	router.POST("/api/user/sign-out", h.SignOut)
 }
 
 func (h *Handler) RegisterStatic(router *gin.Engine) {
