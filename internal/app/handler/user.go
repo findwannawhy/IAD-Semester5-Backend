@@ -41,7 +41,10 @@ func (h *Handler) CreateUser(ctx *gin.Context) {
 	}
 
 	ctx.Header("Location", fmt.Sprintf("/user/%v", user.ID))
-	ctx.JSON(http.StatusCreated, user)
+	ctx.JSON(http.StatusCreated, gin.H{
+		"status": "created",
+		"user":   buildUserResponse(user),
+	})
 }
 
 func (h *Handler) SignIn(ctx *gin.Context) {
@@ -73,7 +76,10 @@ func (h *Handler) SignIn(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, user)
+	ctx.JSON(http.StatusOK, gin.H{
+		"status": "signed-in",
+		"user":   buildUserResponse(user),
+	})
 }
 
 func (h *Handler) GetProfile(ctx *gin.Context) {
@@ -92,7 +98,10 @@ func (h *Handler) GetProfile(ctx *gin.Context) {
 		}
 		return
 	}
-	ctx.JSON(http.StatusOK, user)
+	ctx.JSON(http.StatusOK, gin.H{
+		"status": "ok",
+		"user":   buildUserResponse(user),
+	})
 }
 
 func (h *Handler) UpdateProfile(ctx *gin.Context) {
@@ -117,7 +126,10 @@ func (h *Handler) UpdateProfile(ctx *gin.Context) {
 		}
 		return
 	}
-	ctx.JSON(http.StatusOK, user)
+    ctx.JSON(http.StatusOK, gin.H{
+        "status": "updated",
+        "user":   buildUserResponse(user),
+    })
 }
 
 func (h *Handler) SignOut(ctx *gin.Context) {
@@ -125,4 +137,18 @@ func (h *Handler) SignOut(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{
 		"status": "signed_out",
 	})
+}
+
+type userResponse struct {
+    ID          uint   `json:"id"`
+    Login       string `json:"login"`
+    IsModerator bool   `json:"is_moderator"`
+}
+
+func buildUserResponse(u ds.User) userResponse {
+    return userResponse{
+        ID:          u.ID,
+        Login:       u.Login,
+        IsModerator: u.IsModerator,
+    }
 }

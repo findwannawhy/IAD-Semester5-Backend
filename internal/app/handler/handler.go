@@ -24,7 +24,7 @@ func (h *Handler) RegisterHandler(router *gin.Engine) {
 	router.POST("/api/materials", h.CreateMaterial) // создать материал
 	router.DELETE("/api/materials/:id", h.SoftDeleteMaterial) // удалить материал (soft)
 	router.PUT("/api/materials/:id", h.UpdateMaterial) // обновить материал
-	router.POST("/api/materials/:id/draft", h.AddMaterialToExperiment) // добавить материал в корзину
+	router.POST("/api/materials/:id/experiments/draft", h.AddMaterialToExperiment) // добавить материал в корзину
 	router.POST("/api/materials/:id/image", h.UpdateImage) // обновить изображение материала
 
 	router.GET("/api/experiments/draft", h.GetExperimentCart)	// текущий черновик пользователя
