@@ -14,15 +14,15 @@ func (h *Handler) GetExperiment(ctx *gin.Context) {
 	if err != nil {
 		logrus.Error(err)
 	}
-	experimentItems, experiment, err := h.Repository.GetExperiment(id)
+	experimentSamples, experiment, err := h.Repository.GetExperiment(id)
 	if err != nil {
 		h.errorHandler(ctx, http.StatusInternalServerError, err)
 		return
 	}
 	ctx.HTML(http.StatusOK, "experiment.html", gin.H{
-		"experimentItems": experimentItems,
+		"experimentSamples": experimentSamples,
 		"experiment":      experiment,
-		"count":           h.Repository.GetExperimentItemsCount(),
+		"count":           h.Repository.GetExperimentSamplesCount(),
 	})
 }
 
@@ -39,5 +39,5 @@ func (h *Handler) SoftDeleteExperiment(ctx *gin.Context){
 		return
 	}
 
-	ctx.Redirect(http.StatusFound, "/materials")
+	ctx.Redirect(http.StatusFound, "/acid-soluble-samples")
 }

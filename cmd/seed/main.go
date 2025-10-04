@@ -1,8 +1,8 @@
 package main
 
 import (
-	"io/ioutil"
 	"log"
+	"os"
 
 	"github.com/findwannawhy/IAD-Semester5/internal/app/dsn"
 	"github.com/joho/godotenv"
@@ -18,7 +18,7 @@ func main() {
 		log.Fatalf("db connect failed: %v", err)
 	}
 
-	sql, err := ioutil.ReadFile("resources/db/seed.sql")
+	sql, err := os.ReadFile("resources/db/seed.sql")
 	if err != nil {
 		log.Fatalf("failed to read seed file: %v", err)
 	}

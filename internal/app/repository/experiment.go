@@ -10,63 +10,79 @@ import (
 
 var errNoDraft = errors.New("no draft found")
 
-func (r *Repository) GetExperiment(id int) ([]ds.ItemCard, ds.Experiment, error) {
+type ExperimentSampleCard struct {
+	SampleID                   uint
+	Title                      string
+	Formula                    string
+	ImageURL                  *string
+	RelativeMolecularMass      float64
+	StoichiometricCoefficient  float64
+	SampleMass                 string
+	EvolvedGasVolume           string
+	MassFractionPercentage     string
+}
+
+func (r *Repository) GetExperiment(id int) ([]ExperimentSampleCard, ds.ImpurityFractionExperiment, error) {
 
 	creatorID := r.GetUser()
 
-	var experiment ds.Experiment
+	var experiment ds.ImpurityFractionExperiment
 	err := r.db.Where("id = ?", id).First(&experiment).Error
 	if err != nil {
-		return []ds.ItemCard{}, ds.Experiment{}, err
+		return []ExperimentSampleCard{}, ds.ImpurityFractionExperiment{}, err
 	} else if creatorID != int(experiment.CreatorID) {
-		return []ds.ItemCard{}, ds.Experiment{}, errors.New("you are not allowed")
-	} else if experiment.Status == ds.StatusDeleted {
-		return []ds.ItemCard{}, ds.Experiment{}, errors.New("you can`t watch deleted experiment")
+		return []ExperimentSampleCard{}, ds.ImpurityFractionExperiment{}, errors.New("you are not allowed")
+	} else if experiment.Status == "deleted" {
+		return []ExperimentSampleCard{}, ds.ImpurityFractionExperiment{}, errors.New("you can`t watch deleted experiment")
 	}
 
-	var experimentItems []ds.ExperimentItem
-	var materials []ds.Material
-	sub := r.db.Table("experiment_items").Where("experiment_id = ?", experiment.ID).Find(&experimentItems)
-	err = r.db.Where("id IN (?)", sub.Select("material_id")).Find(&materials).Error
+	var experimentSamples []ds.ExperimentSample
+	var samples []ds.AcidSolubleSample
+	sub := r.db.Table("experiments_samples").Where("experiment_id = ?", experiment.ID).Find(&experimentSamples)
+	err = r.db.Where("id IN (?)", sub.Select("sample_id")).Find(&samples).Error
 	if err != nil {
-		return []ds.ItemCard{}, ds.Experiment{}, err
+		return []ExperimentSampleCard{}, ds.ImpurityFractionExperiment{}, err
 	}
 
+	var cards []ExperimentSampleCard
+	samplesMap := make(map[uint]ds.AcidSolubleSample)
 
-	var cards []ds.ItemCard
-	materialsMap := make(map[uint]ds.Material)
-
-	for _, material := range materials {
-		materialsMap[material.ID] = material
+	for _, sample := range samples {
+		samplesMap[sample.ID] = sample
 	}
 
-	for _, item := range experimentItems {
-		material, ok := materialsMap[item.MaterialID]
+	for _, experimentSample := range experimentSamples {
+		sample, ok := samplesMap[experimentSample.SampleID]
 		if ok {
 			massFractionPercentageStr := ""
-			if item.MassFractionPercentage != nil {
-				massFractionPercentageStr = fmt.Sprintf("%.2f", *item.MassFractionPercentage)
+			if experimentSample.MassFractionPercentage != nil {
+				massFractionPercentageStr = fmt.Sprintf("%.2f", *experimentSample.MassFractionPercentage)
+			}
+			sampleMassStr := ""
+			if experimentSample.SampleMass != nil {
+				sampleMassStr = fmt.Sprintf("%g", *experimentSample.SampleMass)
+				if !strings.Contains(sampleMassStr, ".") {
+					sampleMassStr += ".0"
+				}
 			}
 
-			materialMassStr := fmt.Sprintf("%g", item.MaterialMass)
-			if !strings.Contains(materialMassStr, ".") {
-				materialMassStr += ".0"
+			gasVolumeStr := ""
+			if experimentSample.EvolvedGasVolume != nil {
+				gasVolumeStr = fmt.Sprintf("%g", *experimentSample.EvolvedGasVolume)
+				if !strings.Contains(gasVolumeStr, ".") {
+					gasVolumeStr += ".0"
+				}
 			}
 
-			gasVolumeStr := fmt.Sprintf("%g", item.GasVolume)
-			if !strings.Contains(gasVolumeStr, ".") {
-				gasVolumeStr += ".0"
-			}
-
-			cards = append(cards, ds.ItemCard{
-				ItemID:                    item.ID,
-				Title:                     material.Title,
-				Description:               material.Description,
-				ImageURL:                  material.ImageURL,
-				RelativeMolecularMass:     material.RelativeMolecularMass,
-				StoichiometricCoefficient: material.StoichiometricCoefficient,
-				MaterialMass:              materialMassStr,
-				GasVolume:                 gasVolumeStr,
+			cards = append(cards, ExperimentSampleCard{
+				SampleID:                  sample.ID,
+				Title:                     sample.Title,
+				Formula:                   sample.Formula,
+				ImageURL:                  sample.ImageURL,
+				RelativeMolecularMass:     sample.RelativeMolecularMass,
+				StoichiometricCoefficient: sample.StoichiometricCoefficient,
+				SampleMass:                sampleMassStr,
+				EvolvedGasVolume:          gasVolumeStr,
 				MassFractionPercentage:    massFractionPercentageStr,
 			})
 		}
@@ -76,36 +92,36 @@ func (r *Repository) GetExperiment(id int) ([]ds.ItemCard, ds.Experiment, error)
 }
 
 
-func (r *Repository) CheckCurrentExperimentDraft(creatorID int) (ds.Experiment, error) {
-	var experiment ds.Experiment
+func (r *Repository) CheckCurrentExperimentDraft(creatorID int) (ds.ImpurityFractionExperiment, error) {
+	var experiment ds.ImpurityFractionExperiment
 
 	res := r.db.Where("creator_id = ? AND status = ?", creatorID, "draft").Limit(1).Find(&experiment)
 	if res.Error != nil {
-		return ds.Experiment{}, res.Error
+		return ds.ImpurityFractionExperiment{}, res.Error
 	} else if experiment.ID == 0 {
-		return ds.Experiment{}, errNoDraft
+		return ds.ImpurityFractionExperiment{}, errNoDraft
 	}
 	return experiment, nil
 }
 
-func (r *Repository) GetExperimentDraft(creatorID int) (ds.Experiment, error) {
+func (r *Repository) GetExperimentDraft(creatorID int) (ds.ImpurityFractionExperiment, error) {
 	experiment, err := r.CheckCurrentExperimentDraft(creatorID)
 	if err == errNoDraft {
-		experiment = ds.Experiment{
+		experiment = ds.ImpurityFractionExperiment{
 			CreatorID: uint(creatorID),
-			Status: ds.StatusDraft,
+			Status: "draft",
 		}
 		res := r.db.Create(&experiment)
 		if res.Error != nil {
-			return ds.Experiment{}, res.Error
+			return ds.ImpurityFractionExperiment{}, res.Error
 		}
 		return experiment, nil
 	} else if err != nil {
-		return ds.Experiment{}, err
+		return ds.ImpurityFractionExperiment{}, err
 	}
 	return experiment, nil
 }
 
 func (r *Repository) SoftDeleteExperiment(experimentId int) error{
-	return r.db.Exec("UPDATE experiments SET status = 'deleted' WHERE id = ?", experimentId).Error
+	return r.db.Exec("UPDATE impurity_fraction_experiments SET status = 'deleted' WHERE id = ?", experimentId).Error
 }

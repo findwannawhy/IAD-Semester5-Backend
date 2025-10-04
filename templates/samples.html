@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <title>Вещества</title>
     <link rel="stylesheet" href="/static/styles/globals.css" />
-    <link rel="stylesheet" href="/static/styles/materials.css" />
+    <link rel="stylesheet" href="/static/styles/samples.css" />
     <link rel="icon" href="http://localhost:9000/img/logo-sqr.png" type="image/png" />
   </head>
   <body>
@@ -14,10 +14,10 @@
         <main class="body">
           <section class="catalog">
             <header class="view">
-              <h1 class="text-wrapper">Вещества</h1>
+              <h1 class="text-wrapper">Вещества, доступные для обработки кислотой</h1>
             </header>
             <div class="view-wrapper">
-              <form class="overlap-group-wrapper" action="/materials" method="get">
+              <form class="overlap-group-wrapper" action="/acid-soluble-samples" method="get">
                 <div class="overlap-group">
                   <div class="image-fill">
                     <img class="component" src="http://localhost:9000/img/search.svg" alt="Поиск" />
@@ -29,18 +29,18 @@
                     <input
                       type="text"
                       id="search-input"
-                      name="material_search"
+                      name="search_sample"
                       class="component-2"
                       placeholder="Поиск вещества..."
                       aria-label="Поиск вещества"
-                      value="{{ .material_search }}"
+                      value="{{ .search_sample }}"
                     />
                   </div>
                 </div>
               </form>
             </div>
             <div class="view-2">
-              {{ range .materials }}
+              {{ range .samples }}
               <article class="view-3">
                 <div class="img" role="img" aria-label="{{ .Title }}">
                   <img src="http://localhost:9000/img/{{ .ImageURL }}" alt="{{ .Title }}" />
@@ -60,10 +60,10 @@
                     <p class="mr"><span class="span">Стехиометрический коэффициент:</span><br> <span class="text-wrapper-5"> {{ .StoichiometricCoefficient }} </span></p>
                   </div>
                   <div class="view-5">
-                    <a class="view-6" href="/material/{{ .ID }}" aria-label="Подробнее о {{ .Title }}">
+                    <a class="view-6" href="/acid-soluble-samples/{{ .ID }}" aria-label="Подробнее о {{ .Title }}">
                       <span class="text">Подробнее</span>
                     </a>
-                    <form method="POST" action="/material/{{ .ID }}/add-to-experiment">
+                    <form method="POST" action="/acid-soluble-samples/{{ .ID }}/experiment">
                       <button class="view-6-filled" type="submit" aria-label="Добавить {{ .Title }} в заявку">
                         <span class="text">Добавить</span>
                       </button>
@@ -78,14 +78,14 @@
         <header class="header">
           <div class="container-2">
             <div class="chatgpt-image-wrapper">
-              <a href="/materials"><img class="chatgpt-image" src="http://localhost:9000/img/logo.png" alt="Логотип" /></a>
+              <a href="/acid-soluble-samples"><img class="chatgpt-image" src="http://localhost:9000/img/logo.png" alt="Логотип" /></a>
             </div>
             <div class="view-8"></div>
           </div>
         </header>
       </div>
     </div>
-    <a {{if gt .count 0}}href="/experiment/{{ .experimentId }}"{{end}} class="floating-cart {{if eq .count 0}}inactive{{end}}" aria-label="{{if gt .count 0}}Перейти в корзину{{else}}Корзина пуста{{end}}">
+    <a {{if gt .count 0}}href="/impurity-fraction-experiments/{{ .experimentId }}"{{end}} class="floating-cart {{if eq .count 0}}inactive{{end}}" aria-label="{{if gt .count 0}}Перейти в корзину{{else}}Корзина пуста{{end}}">
       <img src="http://localhost:9000/img/cart.png" alt="Корзина" />
       <span class="cart-badge" aria-label="Количество в корзине">{{ .count }}</span>
     </a>
