@@ -24,7 +24,7 @@ func (h *Handler) RegisterHandler(router *gin.Engine) {
 	router.POST("/api/acid-soluble-samples", h.CreateSample) // создать образец
 	router.DELETE("/api/acid-soluble-samples/:id", h.SoftDeleteSample) // удалить образец (soft)
 	router.PUT("/api/acid-soluble-samples/:id", h.UpdateSample) // обновить образец
-	router.POST("/api/acid-soluble-samples/:id/impurity-fraction-experiments/draft", h.AddSampleToExperimentDraft) // добавить образец в корзину
+	router.POST("/api/acid-soluble-samples/:id/experiments/draft", h.AddSampleToExperimentDraft) // добавить образец в корзину
 	router.POST("/api/acid-soluble-samples/:id/image", h.UpdateImage) // обновить изображение образца
 
 	router.GET("/api/impurity-fraction-experiments/draft", h.GetExperimentCart)	// текущий черновик пользователя
@@ -35,8 +35,8 @@ func (h *Handler) RegisterHandler(router *gin.Engine) {
 	router.PUT("/api/impurity-fraction-experiments/:id/moderation", h.ModerateExperiment) // поменять статус эксперимента (moderator)
 	router.DELETE("/api/impurity-fraction-experiments/:id", h.SoftDeleteExperiment) // удалить эксперимент (soft)
 
-	router.DELETE("/api/impurity-fraction-experiments/:id/acid-soluble-samples/:sample_id", h.DeleteSampleFromExperiment) // удалить образец из эксперимента
-	router.PUT("/api/impurity-fraction-experiments/:id/acid-soluble-samples/:sample_id", h.UpdateExperimentSample) // обновить позицию образца в эксперименте
+	router.DELETE("/api/impurity-fraction-experiments/:id/samples/:sample_id", h.DeleteSampleFromExperiment) // удалить образец из эксперимента
+	router.PUT("/api/impurity-fraction-experiments/:id/samples/:sample_id", h.UpdateExperimentSample) // обновить позицию образца в эксперименте
 
 	router.POST("/api/users", h.CreateUser) // регистрация пользователя
 	router.GET("/api/users/me", h.GetProfile) // профиль текущего пользователя
