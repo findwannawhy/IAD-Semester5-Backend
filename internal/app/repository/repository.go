@@ -36,7 +36,7 @@ func NewRepository(dsn string) (*Repository, error) {
 	return &Repository{
 		db: db,
 		mc: mc,
-		userId: 0,
+		userId: 1,
 	}, nil
 }
 

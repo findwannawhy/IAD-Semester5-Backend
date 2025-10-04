@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/findwannawhy/IAD-Semester5/internal/app/ds"
+	"github.com/findwannawhy/IAD-Semester5/internal/app/dto"
 	"github.com/findwannawhy/IAD-Semester5/internal/app/repository"
 
 	"github.com/gin-gonic/gin"
@@ -45,15 +46,26 @@ func (h *Handler) GetExperiments(ctx *gin.Context) {
 		return
 	}
 
-	resp := make([]ds.ExperimentWithLogins, 0, len(experiments))
+	resp := make([]dto.ExperimentsResponse, 0, len(experiments))
 	for _, experiment := range experiments {
 		creatorLogin, moderatorLogin, err := h.Repository.GetModeratorAndCreatorLogin(experiment)
 		if err != nil {
 			h.errorHandler(ctx, http.StatusInternalServerError, err)
 			return
 		}
-		resp = append(resp, ds.ExperimentWithLogins{
-			Experiment:     experiment,
+		
+		molarVolume := 0.0
+		if experiment.MolarVolume != nil {
+			molarVolume = *experiment.MolarVolume
+		}
+		
+		resp = append(resp, dto.ExperimentsResponse{
+			ID:             experiment.ID,
+			MolarVolume:    molarVolume,
+			Status:         experiment.Status,
+			CreatedAt:      experiment.CreatedAt,
+			FormedAt:       experiment.FormedAt,
+			FinishedAt:     experiment.FinishedAt,
 			CreatorLogin:   creatorLogin,
 			ModeratorLogin: moderatorLogin,
 		})
@@ -62,12 +74,12 @@ func (h *Handler) GetExperiments(ctx *gin.Context) {
 }
 
 func (h *Handler) GetExperimentCart(ctx *gin.Context) {
-	materialsCount := h.Repository.GetExperimentCount(h.Repository.GetUserID())
+	samplesCount := h.Repository.GetExperimentCount(h.Repository.GetUserID())
 
-	if materialsCount == 0 {
-		ctx.JSON(http.StatusOK, gin.H{
-			"status":          "no_draft",
-			"materials_count": materialsCount,
+	if samplesCount == 0 {
+		ctx.JSON(http.StatusOK, dto.DraftExperimentResponse{
+			ExperimentID: 0,
+			SampleCount:  0,
 		})
 		return
 	}
@@ -77,9 +89,9 @@ func (h *Handler) GetExperimentCart(ctx *gin.Context) {
 		if errors.Is(err, repository.ErrNotAllowed) {
 			h.errorHandler(ctx, http.StatusUnauthorized, err)
 		} else if errors.Is(err, repository.ErrNoDraft) {
-			ctx.JSON(http.StatusOK, gin.H{
-				"status":          "no_draft",
-				"materials_count": 0,
+			ctx.JSON(http.StatusOK, dto.DraftExperimentResponse{
+				ExperimentID: 0,
+				SampleCount:  0,
 			})
 		} else {
 			h.errorHandler(ctx, http.StatusInternalServerError, err)
@@ -87,9 +99,9 @@ func (h *Handler) GetExperimentCart(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"id":              experiment.ID,
-		"materials_count": h.Repository.GetExperimentCount(experiment.CreatorID),
+	ctx.JSON(http.StatusOK, dto.DraftExperimentResponse{
+		ExperimentID: experiment.ID,
+		SampleCount:  h.Repository.GetExperimentCount(experiment.CreatorID),
 	})
 }
 
@@ -101,7 +113,7 @@ func (h *Handler) GetExperiment(ctx *gin.Context) {
 		return
 	}
 
-	materials, experiment, err := h.Repository.GetExperimentMaterials(uint(id))
+	samples, experiment, err := h.Repository.GetExperimentSamplesData(uint(id))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			h.errorHandler(ctx, http.StatusNotFound, err)
@@ -119,11 +131,62 @@ func (h *Handler) GetExperiment(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"experiment":      experiment,
-		"creator_login":   creatorLogin,
-		"moderator_login": moderatorLogin,
-		"materials":       materials,
+	// Получаем данные из experiments_samples для каждого образца
+	experimentSamples, err := h.Repository.GetExperimentSamples(experiment.ID)
+	if err != nil {
+		h.errorHandler(ctx, http.StatusInternalServerError, err)
+		return
+	}
+
+	// Создаем мапу для быстрого доступа к данным ExperimentSample по SampleID
+	experimentSampleMap := make(map[uint]ds.ExperimentSample)
+	for _, es := range experimentSamples {
+		experimentSampleMap[es.SampleID] = es
+	}
+
+	// Формируем ExperimentSampleCards
+	experimentSampleCards := make([]dto.ExperimentSampleCard, 0, len(samples))
+	for _, sample := range samples {
+		es := experimentSampleMap[sample.ID]
+		
+		sampleMass := ""
+		if es.SampleMass != nil {
+			sampleMass = fmt.Sprintf("%.2f", *es.SampleMass)
+		}
+		
+		evolvedGasVolume := ""
+		if es.EvolvedGasVolume != nil {
+			evolvedGasVolume = fmt.Sprintf("%.2f", *es.EvolvedGasVolume)
+		}
+		
+		massFractionPercentage := ""
+		if es.MassFractionPercentage != nil {
+			massFractionPercentage = fmt.Sprintf("%.2f", *es.MassFractionPercentage)
+		}
+
+		imageURL := ""
+		if sample.ImageURL != nil {
+			imageURL = *sample.ImageURL
+		}
+
+		experimentSampleCards = append(experimentSampleCards, dto.ExperimentSampleCard{
+			SampleID:                   sample.ID,
+			Title:                      sample.Title,
+			Formula:                    sample.Formula,
+			ImageURL:                   imageURL,
+			RelativeMolecularMass:      sample.RelativeMolecularMass,
+			StoichiometricCoefficient:  sample.StoichiometricCoefficient,
+			SampleMass:                 sampleMass,
+			EvolvedGasVolume:           evolvedGasVolume,
+			MassFractionPercentage:     massFractionPercentage,
+		})
+	}
+
+	ctx.JSON(http.StatusOK, dto.ExperimentResponse{
+		Experiment:            experiment,
+		ExperimentSampleCards: experimentSampleCards,
+		CreatorLogin:          creatorLogin,
+		ModeratorLogin:        moderatorLogin,
 	})
 }
 
@@ -149,16 +212,15 @@ func (h *Handler) FormExperiment(ctx *gin.Context) {
 		return
 	}
 
-	creatorLogin, moderatorLogin, err := h.Repository.GetModeratorAndCreatorLogin(experiment)
+	creatorLogin, _, err := h.Repository.GetModeratorAndCreatorLogin(experiment)
 	if err != nil {
 		h.errorHandler(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"experiment":      experiment,
-		"creator_login":   creatorLogin,
-		"moderator_login": moderatorLogin,
+	ctx.JSON(http.StatusOK, dto.FormExperiment{
+		Experiment:   experiment,
+		CreatorLogin: creatorLogin,
 	})
 }
 
@@ -170,7 +232,7 @@ func (h *Handler) UpdateExperiment(ctx *gin.Context) {
 		return
 	}
 
-	var experimentJSON ds.Experiment
+	var experimentJSON ds.ImpurityFractionExperiment
 	if err := ctx.BindJSON(&experimentJSON); err != nil {
 		h.errorHandler(ctx, http.StatusBadRequest, err)
 		return
@@ -186,16 +248,15 @@ func (h *Handler) UpdateExperiment(ctx *gin.Context) {
 		return
 	}
 
-	creatorLogin, moderatorLogin, err := h.Repository.GetModeratorAndCreatorLogin(experiment)
+	creatorLogin, _, err := h.Repository.GetModeratorAndCreatorLogin(experiment)
 	if err != nil {
 		h.errorHandler(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"experiment":      experiment,
-		"creator_login":   creatorLogin,
-		"moderator_login": moderatorLogin,
+	ctx.JSON(http.StatusOK, dto.UpdateExperiment{
+		Experiment:   experiment,
+		CreatorLogin: creatorLogin,
 	})
 }
 
@@ -209,7 +270,7 @@ func (h *Handler) SoftDeleteExperiment(ctx *gin.Context) {
 
 	status := "deleted"
 
-	_, err = h.Repository.FormExperiment(uint(experimentId), status)
+	experiment, err := h.Repository.FormExperiment(uint(experimentId), status)
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			h.errorHandler(ctx, http.StatusNotFound, err)
@@ -221,7 +282,18 @@ func (h *Handler) SoftDeleteExperiment(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"message": "Experiment deleted"})
+	creatorLogin, _, err := h.Repository.GetModeratorAndCreatorLogin(experiment)
+	if err != nil {
+		h.errorHandler(ctx, http.StatusInternalServerError, err)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, dto.SoftDeleteExperiment{
+		ExperimentID: experiment.ID,
+		Status:       experiment.Status,
+		FormedAt:     experiment.FormedAt,
+		CreatorLogin: creatorLogin,
+	})
 }
 
 func (h *Handler) ModerateExperiment(ctx *gin.Context) {
@@ -240,7 +312,7 @@ func (h *Handler) ModerateExperiment(ctx *gin.Context) {
 		return
 	}
 
-	experiment, err := h.Repository.ModerateExperiment(uint(id), ds.ExperimentStatus(statusJSON.Status))
+	experiment, err := h.Repository.ModerateExperiment(uint(id), statusJSON.Status)
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			h.errorHandler(ctx, http.StatusNotFound, err)
@@ -258,9 +330,9 @@ func (h *Handler) ModerateExperiment(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"experiment":      experiment,
-		"creator_login":   creatorLogin,
-		"moderator_login": moderatorLogin,
+	ctx.JSON(http.StatusOK, dto.ModerateExperiment{
+		Experiment:     experiment,
+		CreatorLogin:   creatorLogin,
+		ModeratorLogin: moderatorLogin,
 	})
 }

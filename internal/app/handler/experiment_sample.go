@@ -6,24 +6,26 @@ import (
 	"strconv"
 
 	"github.com/findwannawhy/IAD-Semester5/internal/app/ds"
+	"github.com/findwannawhy/IAD-Semester5/internal/app/dto"
 	"github.com/findwannawhy/IAD-Semester5/internal/app/repository"
 	"github.com/gin-gonic/gin"
 )
 
-func (h *Handler) DeleteItemFromExperiment(ctx *gin.Context) {
+func (h *Handler) DeleteSampleFromExperiment(ctx *gin.Context) {
   experimentID, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
 		h.errorHandler(ctx, http.StatusBadRequest, err)
 		return
 	}
 
-	materialID, err := strconv.Atoi(ctx.Param("material_id"))
+	sampleID, err := strconv.Atoi(ctx.Param("sample_id"))
 	if err != nil {
 		h.errorHandler(ctx, http.StatusBadRequest, err)
 		return
 	}
 
-	experiment, err := h.Repository.DeleteItemFromExperiment(uint(experimentID), uint(materialID))
+	uintSampleID := uint(sampleID)
+	experiment, err := h.Repository.DeleteSampleFromExperiment(uint(experimentID), uintSampleID)
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			h.errorHandler(ctx, http.StatusNotFound, err)
@@ -35,54 +37,54 @@ func (h *Handler) DeleteItemFromExperiment(ctx *gin.Context) {
 		return
 	}
 
-	creatorLogin, moderatorLogin, err := h.Repository.GetModeratorAndCreatorLogin(experiment)
+	creatorLogin, _, err := h.Repository.GetModeratorAndCreatorLogin(experiment)
 	if err != nil {
 		h.errorHandler(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
-	ctx.JSON(http.StatusOK, ds.ExperimentWithLogins{
-		Experiment:     experiment,
+	ctx.JSON(http.StatusOK, dto.DeleteExperimentSampleResp{
+		ExperimentID:   experiment.ID,
+		SampleID:       uintSampleID,
 		CreatorLogin:   creatorLogin,
-		ModeratorLogin: moderatorLogin,
 	})
 }
 
-type updateExperimentItemRequest struct {
-	MaterialMass *float64 `json:"material_mass"`
-	GasVolume    *float64 `json:"gas_volume"`
+type updateExperimentSampleRequest struct {
+	SampleMass       *float64 `json:"sample_mass"`
+	EvolvedGasVolume *float64 `json:"evolved_gas_volume"`
 }
 
-func (h *Handler) UpdateExperimentItem(ctx *gin.Context) {
+func (h *Handler) UpdateExperimentSample(ctx *gin.Context) {
   experimentID, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
 		h.errorHandler(ctx, http.StatusBadRequest, err)
 		return
 	}
 
-	materialID, err := strconv.Atoi(ctx.Param("material_id"))
+	sampleID, err := strconv.Atoi(ctx.Param("sample_id"))
 	if err != nil {
 		h.errorHandler(ctx, http.StatusBadRequest, err)
 		return
 	}
 
-	var req updateExperimentItemRequest
+	var req updateExperimentSampleRequest
 	if err := ctx.BindJSON(&req); err != nil {
 		h.errorHandler(ctx, http.StatusBadRequest, err)
 		return
 	}
 
-	updateData := ds.ExperimentItem{}
-	if req.MaterialMass != nil {
-		updateData.MaterialMass = *req.MaterialMass
+	updateData := ds.ExperimentSample{}
+	if req.SampleMass != nil {
+		updateData.SampleMass = req.SampleMass
 	}
-	if req.GasVolume != nil {
-		updateData.GasVolume = *req.GasVolume
+	if req.EvolvedGasVolume != nil {
+		updateData.EvolvedGasVolume = req.EvolvedGasVolume
 	}
 
-	experimentItem, err := h.Repository.UpdateExperimentItem(
+	experimentSample, err := h.Repository.UpdateExperimentSample(
 		uint(experimentID),
-		uint(materialID),
+		uint(sampleID),
 		updateData,
 	)
 	if err != nil {
@@ -96,5 +98,6 @@ func (h *Handler) UpdateExperimentItem(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, experimentItem)
+	ctx.JSON(http.StatusOK, experimentSample)
 }
+

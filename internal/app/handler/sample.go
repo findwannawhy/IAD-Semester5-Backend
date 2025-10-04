@@ -7,36 +7,37 @@ import (
 	"strconv"
 
 	"github.com/findwannawhy/IAD-Semester5/internal/app/ds"
+	"github.com/findwannawhy/IAD-Semester5/internal/app/dto"
 	"github.com/findwannawhy/IAD-Semester5/internal/app/repository"
 
 	"github.com/gin-gonic/gin"
 )
 
-func (h *Handler) GetMaterials(ctx *gin.Context) {
-	var materials []ds.Material
+func (h *Handler) GetSamples(ctx *gin.Context) {
+	var samples []ds.AcidSolubleSample
 	var err error
 
-	searchQuery := ctx.Query("material_name")
+	searchQuery := ctx.Query("search_sample")
 	if searchQuery == "" {
-		materials, err = h.Repository.GetMaterials()
+		samples, err = h.Repository.GetSamples()
 		if err != nil {
 			h.errorHandler(ctx, http.StatusInternalServerError, err)
 			return
 		}
 	} else {
-		materials, err = h.Repository.GetMaterialsByName(searchQuery)
+		samples, err = h.Repository.GetSamplesByName(searchQuery)
 		if err != nil {
 			h.errorHandler(ctx, http.StatusInternalServerError, err)
 			return
 		}
 	}
-	if materials == nil {
-		materials = make([]ds.Material, 0)
+	if samples == nil {
+		samples = make([]ds.AcidSolubleSample, 0)
 	}
-	ctx.JSON(http.StatusOK, materials)
+	ctx.JSON(http.StatusOK, samples)
 }
 
-func (h *Handler) GetMaterial(ctx *gin.Context) {
+func (h *Handler) GetSample(ctx *gin.Context) {
 	idStr := ctx.Param("id")
 	id64, err := strconv.ParseUint(idStr, 10, 64)
 	if err != nil {
@@ -45,7 +46,7 @@ func (h *Handler) GetMaterial(ctx *gin.Context) {
 	}
 	id := uint(id64)
 
-	material, err := h.Repository.GetMaterial(id)
+	sample, err := h.Repository.GetSample(id)
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			h.errorHandler(ctx, http.StatusNotFound, err)
@@ -55,26 +56,26 @@ func (h *Handler) GetMaterial(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, material)
+	ctx.JSON(http.StatusOK, sample)
 }
 
-func (h *Handler) CreateMaterial(ctx *gin.Context) {
-	var materialJSON ds.Material
-	if err := ctx.BindJSON(&materialJSON); err != nil {
+func (h *Handler) CreateSample(ctx *gin.Context) {
+	var sampleJSON ds.AcidSolubleSample
+	if err := ctx.BindJSON(&sampleJSON); err != nil {
 		h.errorHandler(ctx, http.StatusBadRequest, err)
 		return
 	}
-	material, err := h.Repository.CreateMaterial(materialJSON)
+	sample, err := h.Repository.CreateSample(sampleJSON)
 	if err != nil {
 		h.errorHandler(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
-	ctx.Header("Location", fmt.Sprintf("/materials/%v", material.ID))
-	ctx.JSON(http.StatusCreated, material)
+	ctx.Header("Location", fmt.Sprintf("/samples/%v", sample.ID))
+	ctx.JSON(http.StatusCreated, sample)
 }
 
-func (h *Handler) SoftDeleteMaterial(ctx *gin.Context) {
+func (h *Handler) SoftDeleteSample(ctx *gin.Context) {
 	idStr := ctx.Param("id")
 	id64, err := strconv.ParseUint(idStr, 10, 64)
 	if err != nil {
@@ -83,7 +84,7 @@ func (h *Handler) SoftDeleteMaterial(ctx *gin.Context) {
 	}
 	id := uint(id64)
 
-	err = h.Repository.SoftDeleteMaterial(id)
+	err = h.Repository.SoftDeleteSample(id)
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			h.errorHandler(ctx, http.StatusNotFound, err)
@@ -94,13 +95,14 @@ func (h *Handler) SoftDeleteMaterial(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{
+		"sample_id": id,
 		"status": "deleted",
 	})
 }
 
-func (h *Handler) UpdateMaterial(ctx *gin.Context) {
-	var materialJSON ds.Material
-	if err := ctx.BindJSON(&materialJSON); err != nil {
+func (h *Handler) UpdateSample(ctx *gin.Context) {
+	var sampleJSON ds.AcidSolubleSample
+	if err := ctx.BindJSON(&sampleJSON); err != nil {
 		h.errorHandler(ctx, http.StatusBadRequest, err)
 		return
 	}
@@ -112,7 +114,7 @@ func (h *Handler) UpdateMaterial(ctx *gin.Context) {
 	}
 	id := uint(id64)
 
-	material, err := h.Repository.UpdateMaterial(id, materialJSON)
+	sample, err := h.Repository.UpdateSample(id, sampleJSON)
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			h.errorHandler(ctx, http.StatusNotFound, err)
@@ -122,10 +124,10 @@ func (h *Handler) UpdateMaterial(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, material)
+	ctx.JSON(http.StatusOK, sample)
 }
 
-func (h *Handler) AddMaterialToExperiment(ctx *gin.Context) {
+func (h *Handler) AddSampleToExperimentDraft(ctx *gin.Context) {
 	userID := h.Repository.GetUserID()
 	if userID == 0 {
 		h.errorHandler(ctx, http.StatusUnauthorized, errors.New("user not authenticated"))
@@ -139,14 +141,14 @@ func (h *Handler) AddMaterialToExperiment(ctx *gin.Context) {
 	}
 	experimentId := experiment.ID
 
-	materialId64, err := strconv.ParseUint(ctx.Param("id"), 10, 64)
+	sampleId64, err := strconv.ParseUint(ctx.Param("id"), 10, 64)
 	if err != nil {
 		h.errorHandler(ctx, http.StatusBadRequest, err)
 		return
 	}
-	materialId := uint(materialId64)
+	sampleId := uint(sampleId64)
 
-	err = h.Repository.AddMaterialToExperiment(uint(experimentId), materialId)
+	err = h.Repository.AddSampleToExperimentDraft(uint(experimentId), sampleId)
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			h.errorHandler(ctx, http.StatusNotFound, err)
@@ -165,26 +167,27 @@ func (h *Handler) AddMaterialToExperiment(ctx *gin.Context) {
 		status = http.StatusCreated
 	}
 
-	creatorLogin, moderatorLogin, err := h.Repository.GetModeratorAndCreatorLogin(experiment)
+	creatorLogin, _,err := h.Repository.GetModeratorAndCreatorLogin(experiment)
 	if err != nil {
 		h.errorHandler(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
-	ctx.JSON(status, gin.H{
-		"experiment":      experiment,
-		"creator_login":    creatorLogin,
-		"moderator_login":  moderatorLogin,
+	ctx.JSON(status, dto.AddSampleToExperiment{
+		SampleID: sampleId,
+		ExperimentId: experiment.ID,
+		ExperimentCreatedAt: experiment.CreatedAt,
+		CreatorLogin: creatorLogin,
 	})
 }
 
 func (h *Handler) UpdateImage(ctx *gin.Context) {
-	materialId64, err := strconv.ParseUint(ctx.Param("id"), 10, 64)
+	sampleId64, err := strconv.ParseUint(ctx.Param("id"), 10, 64)
 	if err != nil {
 		h.errorHandler(ctx, http.StatusBadRequest, err)
 		return
 	}
-	materialId := uint(materialId64)
+	sampleId := uint(sampleId64)
 
 	file, err := ctx.FormFile("image")
 	if err != nil {
@@ -192,7 +195,7 @@ func (h *Handler) UpdateImage(ctx *gin.Context) {
 		return
 	}
 
-	material, err := h.Repository.UpdateImage(ctx, materialId, file)
+	sample, err := h.Repository.UpdateImage(ctx, sampleId, file)
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			h.errorHandler(ctx, http.StatusNotFound, err)
@@ -202,8 +205,10 @@ func (h *Handler) UpdateImage(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"status":   "uploaded",
-		"material": material,
+	ctx.JSON(http.StatusOK, dto.UploadImage{
+		SampleID: sample.ID,
+		SampleTitle: sample.Title,
+		ImageURL: *sample.ImageURL,
 	})
 }
+

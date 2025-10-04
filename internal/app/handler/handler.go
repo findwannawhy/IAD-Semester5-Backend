@@ -19,24 +19,24 @@ func NewHandler(r *repository.Repository) *Handler {
 }
 
 func (h *Handler) RegisterHandler(router *gin.Engine) {
-	router.GET("/api/materials", h.GetMaterials) // список материалов
-	router.GET("/api/materials/:id", h.GetMaterial) // получить материал по id
-	router.POST("/api/materials", h.CreateMaterial) // создать материал
-	router.DELETE("/api/materials/:id", h.SoftDeleteMaterial) // удалить материал (soft)
-	router.PUT("/api/materials/:id", h.UpdateMaterial) // обновить материал
-	router.POST("/api/materials/:id/experiments/draft", h.AddMaterialToExperiment) // добавить материал в корзину
-	router.POST("/api/materials/:id/image", h.UpdateImage) // обновить изображение материала
+	router.GET("/api/acid-soluble-samples", h.GetSamples) // список образцов
+	router.GET("/api/acid-soluble-samples/:id", h.GetSample) // получить образец по id
+	router.POST("/api/acid-soluble-samples", h.CreateSample) // создать образец
+	router.DELETE("/api/acid-soluble-samples/:id", h.SoftDeleteSample) // удалить образец (soft)
+	router.PUT("/api/acid-soluble-samples/:id", h.UpdateSample) // обновить образец
+	router.POST("/api/acid-soluble-samples/:id/impurity-fraction-experiments/draft", h.AddSampleToExperimentDraft) // добавить образец в корзину
+	router.POST("/api/acid-soluble-samples/:id/image", h.UpdateImage) // обновить изображение образца
 
-	router.GET("/api/experiments/draft", h.GetExperimentCart)	// текущий черновик пользователя
-	router.GET("/api/experiments", h.GetExperiments) // список экспериментов
-	router.GET("/api/experiments/:id", h.GetExperiment) // получить эксперимент по id
-	router.PUT("/api/experiments/:id", h.UpdateExperiment) // обновить эксперимент
-	router.PUT("/api/experiments/:id/form", h.FormExperiment) // поменять статус эксперимента (user)
-	router.PUT("/api/experiments/:id/moderation", h.ModerateExperiment) // поменять статус эксперимента (moderator)
-	router.DELETE("/api/experiments/:id", h.SoftDeleteExperiment) // удалить эксперимент (soft)
+	router.GET("/api/impurity-fraction-experiments/draft", h.GetExperimentCart)	// текущий черновик пользователя
+	router.GET("/api/impurity-fraction-experiments", h.GetExperiments) // список экспериментов
+	router.GET("/api/impurity-fraction-experiments/:id", h.GetExperiment) // получить эксперимент по id
+	router.PUT("/api/impurity-fraction-experiments/:id", h.UpdateExperiment) // обновить эксперимент
+	router.PUT("/api/impurity-fraction-experiments/:id/formation", h.FormExperiment) // поменять статус эксперимента (user)
+	router.PUT("/api/impurity-fraction-experiments/:id/moderation", h.ModerateExperiment) // поменять статус эксперимента (moderator)
+	router.DELETE("/api/impurity-fraction-experiments/:id", h.SoftDeleteExperiment) // удалить эксперимент (soft)
 
-	router.DELETE("/api/experiments/:id/materials/:material_id", h.DeleteItemFromExperiment) // удалить материал из эксперимента
-	router.PUT("/api/experiments/:id/materials/:material_id", h.UpdateExperimentItem) // обновить позицию материала в эксперименте
+	router.DELETE("/api/impurity-fraction-experiments/:id/acid-soluble-samples/:sample_id", h.DeleteSampleFromExperiment) // удалить образец из эксперимента
+	router.PUT("/api/impurity-fraction-experiments/:id/acid-soluble-samples/:sample_id", h.UpdateExperimentSample) // обновить позицию образца в эксперименте
 
 	router.POST("/api/users", h.CreateUser) // регистрация пользователя
 	router.GET("/api/users/me", h.GetProfile) // профиль текущего пользователя

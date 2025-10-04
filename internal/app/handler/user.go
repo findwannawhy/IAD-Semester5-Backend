@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/findwannawhy/IAD-Semester5/internal/app/ds"
+	"github.com/findwannawhy/IAD-Semester5/internal/app/dto"
 	"github.com/findwannawhy/IAD-Semester5/internal/app/repository"
 
 	"github.com/gin-gonic/gin"
@@ -41,9 +42,10 @@ func (h *Handler) CreateUser(ctx *gin.Context) {
 	}
 
 	ctx.Header("Location", fmt.Sprintf("/user/%v", user.ID))
-	ctx.JSON(http.StatusCreated, gin.H{
-		"status": "created",
-		"user":   buildUserResponse(user),
+	ctx.JSON(http.StatusCreated, dto.UserResponse{
+		ID: user.ID,
+		Login: user.Login,
+		IsModerator: user.IsModerator,
 	})
 }
 
@@ -76,9 +78,10 @@ func (h *Handler) SignIn(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"status": "signed-in",
-		"user":   buildUserResponse(user),
+	ctx.JSON(http.StatusOK, dto.UserResponse{
+		ID: user.ID,
+		Login: user.Login,
+		IsModerator: user.IsModerator,
 	})
 }
 
@@ -98,9 +101,10 @@ func (h *Handler) GetProfile(ctx *gin.Context) {
 		}
 		return
 	}
-	ctx.JSON(http.StatusOK, gin.H{
-		"status": "ok",
-		"user":   buildUserResponse(user),
+	ctx.JSON(http.StatusOK, dto.UserResponse{
+		ID: user.ID,
+		Login: user.Login,
+		IsModerator: user.IsModerator,
 	})
 }
 
@@ -126,29 +130,16 @@ func (h *Handler) UpdateProfile(ctx *gin.Context) {
 		}
 		return
 	}
-    ctx.JSON(http.StatusOK, gin.H{
-        "status": "updated",
-        "user":   buildUserResponse(user),
-    })
-}
-
-func (h *Handler) SignOut(ctx *gin.Context) {
-	h.Repository.SignOut()
-	ctx.JSON(http.StatusOK, gin.H{
-		"status": "signed_out",
+	ctx.JSON(http.StatusOK, dto.UserResponse{
+		ID: user.ID,
+		Login: user.Login,
+		IsModerator: user.IsModerator,
 	})
 }
 
-type userResponse struct {
-    ID          uint   `json:"id"`
-    Login       string `json:"login"`
-    IsModerator bool   `json:"is_moderator"`
-}
-
-func buildUserResponse(u ds.User) userResponse {
-    return userResponse{
-        ID:          u.ID,
-        Login:       u.Login,
-        IsModerator: u.IsModerator,
-    }
+func (h *Handler) SignOut(ctx *gin.Context) {
+	//h.Repository.SignOut()
+	ctx.JSON(http.StatusOK, gin.H{
+		"status": "signed_out",
+	})
 }

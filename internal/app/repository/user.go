@@ -88,7 +88,7 @@ func (r *Repository) SignIn(user ds.User) (ds.User, error) {
 	}
 
 	// Установка ID пользователя в сессии
-	r.SetUserID(dbUser.ID)
+	// r.SetUserID(dbUser.ID)
 	return dbUser, nil
 }
 

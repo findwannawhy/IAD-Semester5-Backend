@@ -21,7 +21,7 @@ func NewMinioClient(endpoint, accessKey, secretKey string, useSSL bool) (*minio.
 	})
 }
 
-func UploadImage(ctx context.Context, client *minio.Client, bucket string, file *multipart.FileHeader, material ds.Material) (string, error) {
+func UploadImage(ctx context.Context, client *minio.Client, bucket string, file *multipart.FileHeader, sample ds.AcidSolubleSample) (string, error) {
 	f, err := file.Open()
 	if err != nil {
 		return "",err
@@ -42,7 +42,7 @@ func UploadImage(ctx context.Context, client *minio.Client, bucket string, file 
 			ext = ".bin"
 		}
 	}
-	objectName := fmt.Sprintf("%s%s", material.Title, ext)
+	objectName := fmt.Sprintf("%s%s", sample.Title, ext)
 
 	_, err = UploadFromReader(ctx, client, bucket, objectName, f, file.Size, contentType)
 	if err != nil {

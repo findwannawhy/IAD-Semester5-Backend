@@ -1,6 +1,6 @@
 package ds
 
-type Material struct {
+type AcidSolubleSample struct {
 	ID                        uint    `gorm:"primaryKey"                      json:"id"`
 	Title                     string  `gorm:"size:50;not null;index"          json:"title"`
 	Formula                   string  `gorm:"size:30;not null;index"          json:"formula"`

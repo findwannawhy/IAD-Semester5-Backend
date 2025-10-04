@@ -12,8 +12,8 @@ import (
 
 var errNoDraft = errors.New("no draft found")
 
-func (r *Repository) GetExperiments(from, to time.Time, status string) ([]ds.Experiment, error) {
-	var experiments []ds.Experiment
+func (r *Repository) GetExperiments(from, to time.Time, status string) ([]ds.ImpurityFractionExperiment, error) {
+	var experiments []ds.ImpurityFractionExperiment
 	sub := r.db.Where("status != 'deleted' and status != 'draft'")
 	if !from.IsZero() {
 		sub = sub.Where("created_at > ?", from)
@@ -33,70 +33,70 @@ func (r *Repository) GetExperiments(from, to time.Time, status string) ([]ds.Exp
 	return experiments, nil
 }
 
-func (r *Repository) GetExperimentItems(experimentId uint) ([]ds.ExperimentItem, error) {
-	var experimentItems []ds.ExperimentItem
-	err := r.db.Where("experiment_id = ?", experimentId).Find(&experimentItems).Error
+func (r *Repository) GetExperimentSamples(experimentId uint) ([]ds.ExperimentSample, error) {
+	var experimentSamples []ds.ExperimentSample
+	err := r.db.Where("experiment_id = ?", experimentId).Find(&experimentSamples).Error
 	if err != nil {
 		return nil, err
 	}
-	return experimentItems, nil
+	return experimentSamples, nil
 }
 
-func (r *Repository) GetExperimentItem(MaterialID uint, ExperimentID uint) (ds.ExperimentItem, error) {
-	var experimentItem ds.ExperimentItem
-	err := r.db.Where("material_id = ? and experiment_id = ?", MaterialID, ExperimentID).First(&experimentItem).Error
+func (r *Repository) GetExperimentSample(SampleID uint, ExperimentID uint) (ds.ExperimentSample, error) {
+	var experimentSample ds.ExperimentSample
+	err := r.db.Where("sample_id = ? and experiment_id = ?", SampleID, ExperimentID).First(&experimentSample).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return ds.ExperimentItem{}, fmt.Errorf("%w: experiment item not found", ErrNotFound)
+			return ds.ExperimentSample{}, fmt.Errorf("%w: образец эксперимента не найден", ErrNotFound)
 		}
-		return ds.ExperimentItem{}, err
+		return ds.ExperimentSample{}, err
 	}
-	return experimentItem, nil
+	return experimentSample, nil
 }
 
-func (r *Repository) GetExperimentMaterials(id uint) ([]ds.Material, ds.Experiment, error) {
+func (r *Repository) GetExperimentSamplesData(id uint) ([]ds.AcidSolubleSample, ds.ImpurityFractionExperiment, error) {
 	experiment, err := r.GetSingleExperiment(id)
 	if err != nil {
-		return []ds.Material{}, ds.Experiment{}, err
+		return []ds.AcidSolubleSample{}, ds.ImpurityFractionExperiment{}, err
 	}
 
-	var materials []ds.Material
-	sub := r.db.Table("experiment_items").Where("experiment_id = ?", experiment.ID)
-	err = r.db.Order("id DESC").Where("id IN (?)", sub.Select("material_id")).Find(&materials).Error
+	var samples []ds.AcidSolubleSample
+	sub := r.db.Table("experiments_samples").Where("experiment_id = ?", experiment.ID)
+	err = r.db.Order("id DESC").Where("id IN (?)", sub.Select("sample_id")).Find(&samples).Error
 
 	if err != nil {
-		return []ds.Material{}, ds.Experiment{}, err
+		return []ds.AcidSolubleSample{}, ds.ImpurityFractionExperiment{}, err
 	}
 
-	return materials, experiment, nil
+	return samples, experiment, nil
 }
 
-func (r *Repository) CheckCurrentExperimentDraft(creatorID uint) (ds.Experiment, error) {	
-	var experiment ds.Experiment
+func (r *Repository) CheckCurrentExperimentDraft(creatorID uint) (ds.ImpurityFractionExperiment, error) {	
+	var experiment ds.ImpurityFractionExperiment
 	res := r.db.Where("creator_id = ? AND status = ?", creatorID, "draft").Limit(1).Find(&experiment)
 	if res.Error != nil {
-		return ds.Experiment{}, res.Error
+		return ds.ImpurityFractionExperiment{}, res.Error
 	} else if res.RowsAffected == 0 {
-		return ds.Experiment{}, ErrNoDraft
+		return ds.ImpurityFractionExperiment{}, ErrNoDraft
 	}
 	return experiment, nil
 }
 
-func (r *Repository) GetExperimentDraft(creatorID uint) (ds.Experiment, bool, error) {
+func (r *Repository) GetExperimentDraft(creatorID uint) (ds.ImpurityFractionExperiment, bool, error) {
 	experiment, err := r.CheckCurrentExperimentDraft(creatorID)
 	if errors.Is(err, ErrNoDraft) {
-		experiment = ds.Experiment{
+		experiment = ds.ImpurityFractionExperiment{
 			Status:     "draft",
 			CreatorID:  creatorID,
 			CreatedAt: time.Now(),
 		}
 		result := r.db.Create(&experiment)
 		if result.Error != nil {
-			return ds.Experiment{}, false, result.Error
+			return ds.ImpurityFractionExperiment{}, false, result.Error
 		}
 		return experiment, true, nil
 	} else if err != nil {
-		return ds.Experiment{}, false, err
+		return ds.ImpurityFractionExperiment{}, false, err
 	}
 	return experiment, true, nil
 }
@@ -111,82 +111,82 @@ func (r *Repository) GetExperimentCount(creatorID uint) int64 {
 	if err != nil {
 		return 0
 	}
-	err = r.db.Model(&ds.ExperimentItem{}).Where("experiment_id = ?", experiment.ID).Count(&count).Error
+	err = r.db.Model(&ds.ExperimentSample{}).Where("experiment_id = ?", experiment.ID).Count(&count).Error
 	if err != nil {
-		logrus.Println("Error counting records in experiment_items:", err)
+		logrus.Println("Error counting records in experiments_samples:", err)
 	}
 
 	return count
 }
 
-func (r *Repository) GetSingleExperiment(id uint) (ds.Experiment, error) {
-	var experiment ds.Experiment
+func (r *Repository) GetSingleExperiment(id uint) (ds.ImpurityFractionExperiment, error) {
+	var experiment ds.ImpurityFractionExperiment
 	err := r.db.Where("id = ?", id).First(&experiment).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return ds.Experiment{}, fmt.Errorf("%w: эксперимент с id %d", ErrNotFound, id)
+			return ds.ImpurityFractionExperiment{}, fmt.Errorf("%w: эксперимент с id %d", ErrNotFound, id)
 		}
-		return ds.Experiment{}, err
+		return ds.ImpurityFractionExperiment{}, err
 	} else if experiment.Status == "deleted"  {
-		return ds.Experiment{}, fmt.Errorf("%w: эксперимент удален", ErrNotAllowed)
+		return ds.ImpurityFractionExperiment{}, fmt.Errorf("%w: эксперимент удален", ErrNotAllowed)
 	}
 	return experiment, nil
 }
 
-func (r *Repository) FormExperiment(experimentId uint, status string) (ds.Experiment, error) {
+func (r *Repository) FormExperiment(experimentId uint, status string) (ds.ImpurityFractionExperiment, error) {
 	experiment, err := r.GetSingleExperiment(experimentId)
 	if err != nil {
-		return ds.Experiment{}, err
+		return ds.ImpurityFractionExperiment{}, err
 	}
 
 	if experiment.Status != "draft" {
-		return ds.Experiment{}, fmt.Errorf("эта заявка не может быть %s", status)
+		return ds.ImpurityFractionExperiment{}, fmt.Errorf("эта заявка не может быть %s", status)
 	}
 	
 	if status != "deleted"{
-		if experiment.MolarVolume <= 0 {
-		 	return ds.Experiment{}, errors.New("некорректный молярный объем")
+		if experiment.MolarVolume == nil || *experiment.MolarVolume <= 0 {
+		 	return ds.ImpurityFractionExperiment{}, errors.New("некорректный молярный объем")
 		}
-		ExperimentItems, _ := r.GetExperimentItems(experiment.ID)
-		for _, experimentItem := range ExperimentItems {
-			if experimentItem.MaterialMass <= 0{
-				return ds.Experiment{}, errors.New("некорректная масса материала" )			
+		experimentSamples, _ := r.GetExperimentSamples(experiment.ID)
+		for _, experimentSample := range experimentSamples {
+			if experimentSample.SampleMass == nil || *experimentSample.SampleMass <= 0{
+				return ds.ImpurityFractionExperiment{}, errors.New("некорректная масса образца" )			
 			}
-			if experimentItem.GasVolume <= 0{
-				return ds.Experiment{}, errors.New("некорректный объем газа" )			
+			if experimentSample.EvolvedGasVolume == nil || *experimentSample.EvolvedGasVolume <= 0{
+				return ds.ImpurityFractionExperiment{}, errors.New("некорректный объем выделившегося газа" )			
 			}
 		}
 	}	
 
 	now := time.Now()
-	err = r.db.Model(&experiment).Updates(ds.Experiment{
-		Status:   ds.ExperimentStatus(status),
+	err = r.db.Model(&experiment).Updates(ds.ImpurityFractionExperiment{
+		Status:   status,
 		FormedAt: &now,
 	}).Error
 	if err != nil {
-		return ds.Experiment{}, err
+		return ds.ImpurityFractionExperiment{}, err
 	}
 
 	return experiment, nil
 }
 
-func (r *Repository) UpdateExperiment(id uint, experiment ds.Experiment) (ds.Experiment, error) {
-	dbExperiment := ds.Experiment{}
+func (r *Repository) UpdateExperiment(id uint, experiment ds.ImpurityFractionExperiment) (ds.ImpurityFractionExperiment, error) {
+	dbExperiment := ds.ImpurityFractionExperiment{}
 
-	if experiment.MolarVolume <= 0 {
-		return ds.Experiment{}, errors.New("некорректный молярный объем")
+	if experiment.MolarVolume != nil && *experiment.MolarVolume <= 0 {
+		return ds.ImpurityFractionExperiment{}, errors.New("некорректный молярный объем")
   }
 
 	err := r.db.Where("id = ? and status != 'deleted'", id).First(&dbExperiment).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return ds.Experiment{}, fmt.Errorf("%w: эксперимент с id %d", ErrNotFound, id)
+			return ds.ImpurityFractionExperiment{}, fmt.Errorf("%w: эксперимент с id %d", ErrNotFound, id)
 		}
-		return ds.Experiment{}, err
+		return ds.ImpurityFractionExperiment{}, err
 	}
 	err = r.db.Model(&dbExperiment).Updates(experiment).Error
 	if err != nil {
-		return ds.Experiment{}, err
+		return ds.ImpurityFractionExperiment{}, err
 	}
 	return dbExperiment, nil
 }
@@ -195,87 +195,87 @@ func CalculateMassFraction(
 	molarVolume float64,
 	relativeMolecularMass float64,
 	stoichiometricCoefficient float64,
-	materialMass float64,
-	gasVolume float64,
+	sampleMass float64,
+	evolvedGasVolume float64,
 ) (float64, error) {
 
 	if molarVolume == 0 {
 		return 0, errors.New("неправильный молярный объем")
 	}
 
-	if materialMass == 0 {
-		return 0, errors.New("неправильная масса материала")
+	if sampleMass == 0 {
+		return 0, errors.New("неправильная масса образца")
 	}
 	
-	if gasVolume == 0 {
-		return 0, errors.New("неправильный объем газа")
+	if evolvedGasVolume == 0 {
+		return 0, errors.New("неправильный объем выделившегося газа")
 	}
 
 	// Найдём количество вещества газа в молях
-	nGas := gasVolume / molarVolume
+	nGas := evolvedGasVolume / molarVolume
 	// Найдём количество вещества чистого вещества в молях
 	nPureSubstance := nGas / stoichiometricCoefficient
 	// Найдём массу чистого вещества в граммах
 	mPureSubstance := nPureSubstance * relativeMolecularMass
 	// Найдём массу примесей в граммах
-	mImpurities := materialMass - mPureSubstance
+	mImpurities := sampleMass - mPureSubstance
 	// Найдём массовую долю примесей в процентах
-	massFractionPercentage := mImpurities / materialMass * 100
+	massFractionPercentage := mImpurities / sampleMass * 100
 	return massFractionPercentage, nil
 }
 
-func (r *Repository) ModerateExperiment(id uint, status ds.ExperimentStatus) (ds.Experiment, error) {
-	if status != ds.StatusFinished && status != ds.StatusRejected {
-		return ds.Experiment{}, errors.New("неверный статус")
+func (r *Repository) ModerateExperiment(id uint, status string) (ds.ImpurityFractionExperiment, error) {
+	if status != "finished" && status != "rejected" {
+		return ds.ImpurityFractionExperiment{}, errors.New("неверный статус")
 	}
 
 	user, err := r.GetUserByID(r.GetUserID())
 	if err != nil {
-		return ds.Experiment{}, err
+		return ds.ImpurityFractionExperiment{}, err
 	}
 
 	if !user.IsModerator {
-		return ds.Experiment{}, fmt.Errorf("%w: вы не модератор", ErrNotAllowed)
+		return ds.ImpurityFractionExperiment{}, fmt.Errorf("%w: вы не модератор", ErrNotAllowed)
 	}
 
 	experiment, err := r.GetSingleExperiment(id)
 	if err != nil {
-		return ds.Experiment{}, err
+		return ds.ImpurityFractionExperiment{}, err
 	} else if experiment.Status != "formed" {
-		return ds.Experiment{}, fmt.Errorf("это исследование не может быть %s", status)
+		return ds.ImpurityFractionExperiment{}, fmt.Errorf("это исследование не может быть %s", status)
 	}
 
-	if status == ds.StatusFinished {
-		experimentItems, err := r.GetExperimentItems(experiment.ID)
+	if status == "finished" {
+		experimentSamples, err := r.GetExperimentSamples(experiment.ID)
 		if err != nil {
-			return ds.Experiment{}, err
+			return ds.ImpurityFractionExperiment{}, err
 		}
-		for _, experimentItem := range experimentItems {
-			material, err := r.GetMaterial(experimentItem.MaterialID)
+		for _, experimentSample := range experimentSamples {
+			sample, err := r.GetSample(experimentSample.SampleID)
 			if err != nil {
-				return ds.Experiment{}, err
+				return ds.ImpurityFractionExperiment{}, err
 			}
-			massFractionPercentage, err := CalculateMassFraction(experiment.MolarVolume, material.RelativeMolecularMass, material.StoichiometricCoefficient, experimentItem.MaterialMass, experimentItem.GasVolume)
+			massFractionPercentage, err := CalculateMassFraction(*experiment.MolarVolume, sample.RelativeMolecularMass, sample.StoichiometricCoefficient, *experimentSample.SampleMass, *experimentSample.EvolvedGasVolume)
 			if err != nil {
-				return ds.Experiment{}, err
+				return ds.ImpurityFractionExperiment{}, err
 			}
-			err = r.db.Model(&experimentItem).Updates(ds.ExperimentItem{
+			err = r.db.Model(&experimentSample).Where("experiment_id = ? AND sample_id = ?", experiment.ID, experimentSample.SampleID).Updates(ds.ExperimentSample{
 				MassFractionPercentage: &massFractionPercentage,
 			}).Error
 			if err != nil {
-				return ds.Experiment{}, err
+				return ds.ImpurityFractionExperiment{}, err
 			}
 		}
 	}
 
 	now := time.Now()
-	err = r.db.Model(&experiment).Updates(ds.Experiment{
+	err = r.db.Model(&experiment).Updates(ds.ImpurityFractionExperiment{
 		Status: status,
 		FinishedAt: &now,
 		ModeratorID: &user.ID,
 	}).Error
 	if err != nil {
-		return ds.Experiment{}, err
+		return ds.ImpurityFractionExperiment{}, err
 	}
 
 	return experiment, nil

@@ -4,36 +4,18 @@ import (
 	"time"
 )
 
-type ExperimentStatus string
+type ImpurityFractionExperiment struct {
+  ID           uint         `gorm:"primaryKey"                                       json:"id"`
+	MolarVolume *float64      `gorm:"type:double precision"                            json:"molar_volume"`
+	Status       string       `gorm:"type:varchar(16);not null;default:'draft';index;check:status IN ('draft','deleted','formed','finished','rejected')" json:"status"`
+	CreatedAt    time.Time    `gorm:"<-:create;not null;index"                         json:"created_at"`            
+	FormedAt    *time.Time    `gorm:""                                                 json:"formed_at"`
+	FinishedAt  *time.Time    `gorm:""                                                 json:"finished_at"`
 
-const (
-	StatusDraft    ExperimentStatus = "draft"     // черновик (создан черновик)
-	StatusDeleted  ExperimentStatus = "deleted"   // удалён (создатель удалил)
-	StatusFormed   ExperimentStatus = "formed"    // сформирован (создатель завершил оформление)
-	StatusFinished ExperimentStatus = "finished"  // завершён (модератор подтвердил)
-	StatusRejected ExperimentStatus = "rejected"  // отклонён (модератор отклонил)
-)
+	CreatorID    uint         `gorm:"not null;index;uniqueIndex:uid_one_draft_per_user,where:status = 'draft'" json:"creator_id"`
+	ModeratorID *uint         `gorm:"index"                                                                    json:"moderator_id"`
 
-type Experiment struct {
-  ID           uint             `gorm:"primaryKey"                                       json:"id"`
-	MolarVolume  float64          `gorm:"type:double precision;default:22.4"               json:"molar_volume"`
-	Status       ExperimentStatus `gorm:"type:varchar(16);not null;default:'draft';index"  json:"status"`
-	CreatedAt    time.Time        `gorm:"<-:create;not null;index"                         json:"created_at"`            
-	FormedAt    *time.Time        `gorm:""                                                 json:"formed_at"`   // «дата формирования» (действие создателя)
-	FinishedAt  *time.Time        `gorm:""                                                 json:"finished_at"` // «дата завершения» (действие модератора)
+	Creator     *User         `gorm:"constraint:OnUpdate:RESTRICT,OnDelete:RESTRICT"   json:"creator"`
+	Moderator   *User         `gorm:"constraint:OnUpdate:RESTRICT,OnDelete:RESTRICT"   json:"moderator"`
 
-	CreatorID    uint             `gorm:"not null;index"                                   json:"creator_id"`
-	ModeratorID *uint             `gorm:"index"                                            json:"moderator_id"`
-
-	Creator     *User             `gorm:"constraint:OnUpdate:RESTRICT,OnDelete:RESTRICT"   json:"creator"`
-	Moderator   *User             `gorm:"constraint:OnUpdate:RESTRICT,OnDelete:RESTRICT"   json:"moderator"`
-
-	// правило: у каждого пользователя не более одного эксперимента в статусе черновик
-	_ struct{} `gorm:"uniqueIndex:uid_one_draft_per_user,where:status = 'draft';"`
-}
-
-type ExperimentWithLogins struct {
-	Experiment
-	CreatorLogin   string `json:"creator_login"`
-	ModeratorLogin string `json:"moderator_login"`
 }
