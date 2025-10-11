@@ -2,6 +2,8 @@ package ds
 
 import (
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type ImpurityFractionExperiment struct {
@@ -12,8 +14,8 @@ type ImpurityFractionExperiment struct {
 	FormedAt    *time.Time    `gorm:""                                                 json:"formed_at"`
 	FinishedAt  *time.Time    `gorm:""                                                 json:"finished_at"`
 
-	CreatorID    uint         `gorm:"not null;index;uniqueIndex:uid_one_draft_per_user,where:status = 'draft'" json:"creator_id"`
-	ModeratorID *uint         `gorm:"index"                                                                    json:"moderator_id"`
+	CreatorID    uuid.UUID         `gorm:"not null;index;uniqueIndex:uid_one_draft_per_user,where:status = 'draft'" json:"creator_id"`
+	ModeratorID *uuid.UUID         `gorm:"index"                                                                    json:"moderator_id"`
 
 	Creator     *User         `gorm:"constraint:OnUpdate:RESTRICT,OnDelete:RESTRICT"   json:"creator"`
 	Moderator   *User         `gorm:"constraint:OnUpdate:RESTRICT,OnDelete:RESTRICT"   json:"moderator"`

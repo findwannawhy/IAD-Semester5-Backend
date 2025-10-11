@@ -1,47 +1,47 @@
 package handler
 
 import (
+	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
+	"time"
 
 	"github.com/findwannawhy/IAD-Semester5/internal/app/ds"
 	"github.com/findwannawhy/IAD-Semester5/internal/app/dto"
 	"github.com/findwannawhy/IAD-Semester5/internal/app/repository"
-
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt"
+	"github.com/google/uuid"
 )
 
-func (h *Handler) CreateUser(ctx *gin.Context) {
+// SignUp
+// @Summary Регистрация пользователя
+// @Description Регистрирует нового пользователя. Возвращает URL созданного ресурса в Location и тело созданного пользователя.
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param user body ds.User true "Параметры нового пользователя"
+// @Success 201 {object} dto.UserResponse "Пользователь создан"
+// @Failure 400 {object} map[string]string "Ошибка валидации или входных данных"
+// @Failure 500 {object} map[string]string "Внутренняя ошибка сервера"
+// @Router /users/sign-up [post]
+func (h *Handler) SignUp(ctx *gin.Context) {
 	var userJSON ds.User
 	if err := ctx.BindJSON(&userJSON); err != nil {
 		h.errorHandler(ctx, http.StatusBadRequest, err)
 		return
 	}
 
-	// Валидация обязательных полей
-	if userJSON.Login == "" {
-		h.errorHandler(ctx, http.StatusBadRequest, fmt.Errorf("field 'login' is required"))
-		return
-	}
-	if userJSON.Password == "" {
-		h.errorHandler(ctx, http.StatusBadRequest, fmt.Errorf("field 'password' is required"))
-		return
-	}
-
 	user, err := h.Repository.CreateUser(userJSON)
 	if err != nil {
-		if errors.Is(err, repository.ErrAlreadyExists) {
-			h.errorHandler(ctx, http.StatusConflict, err)
-		} else if errors.Is(err, repository.ErrNotAllowed) {
-			h.errorHandler(ctx, http.StatusForbidden, err)
-		} else {
-			h.errorHandler(ctx, http.StatusInternalServerError, err)
-		}
+		h.errorHandler(ctx, http.StatusBadRequest, err)
 		return
 	}
 
-	ctx.Header("Location", fmt.Sprintf("/user/%v", user.ID))
+	ctx.Header("Location", fmt.Sprintf("/users/%v", user.Login))
 	ctx.JSON(http.StatusCreated, dto.UserResponse{
 		ID: user.ID,
 		Login: user.Login,
@@ -49,6 +49,18 @@ func (h *Handler) CreateUser(ctx *gin.Context) {
 	})
 }
 
+// SignIn
+// @Summary Вход (получение токена)
+// @Description Принимает логин/пароль, возвращает jwt-токен в формате {"token":"..."}.
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param credentials body ds.User true "Логин и пароль"
+// @Success 200 {object} map[string]string "token"
+// @Failure 400 {object} map[string]string "Неверный запрос"
+// @Failure 404 {object} map[string]string "Пользователь не найден"
+// @Failure 500 {object} map[string]string "Внутренняя ошибка сервера"
+// @Router /users/sign-in [post]
 func (h *Handler) SignIn(ctx *gin.Context) {
 	var userJSON ds.User
 	if err := ctx.BindJSON(&userJSON); err != nil {
@@ -56,51 +68,59 @@ func (h *Handler) SignIn(ctx *gin.Context) {
 		return
 	}
 
-	// Валидация обязательных полей
-	if userJSON.Login == "" {
-		h.errorHandler(ctx, http.StatusBadRequest, fmt.Errorf("field 'login' is required"))
+	token, err := h.Repository.SignIn(userJSON)
+	if err == repository.ErrNotFound {
+		h.errorHandler(ctx, http.StatusNotFound, err)
 		return
 	}
-	if userJSON.Password == "" {
-		h.errorHandler(ctx, http.StatusBadRequest, fmt.Errorf("field 'password' is required"))
-		return
-	}
-
-	user, err := h.Repository.SignIn(userJSON)
 	if err != nil {
-		if errors.Is(err, repository.ErrNotFound) {
-			h.errorHandler(ctx, http.StatusUnauthorized, fmt.Errorf("invalid login or password"))
-		} else if err.Error() == "wrong password" {
-			h.errorHandler(ctx, http.StatusUnauthorized, fmt.Errorf("invalid login or password"))
-		} else {
-			h.errorHandler(ctx, http.StatusInternalServerError, err)
-		}
+		h.errorHandler(ctx, http.StatusInternalServerError, err)
 		return
 	}
-
-	ctx.JSON(http.StatusOK, dto.UserResponse{
-		ID: user.ID,
-		Login: user.Login,
-		IsModerator: user.IsModerator,
+	ctx.JSON(http.StatusOK, gin.H{
+		"token": token,
 	})
 }
 
+// GetProfile
+// @Summary Получить профиль пользователя
+// @Description Возвращает данные профиля (доступен только тот, чей UUID совпадает с user_id в токене).
+// @Tags users
+// @Produce json
+// @Param login path string true "Логин пользователя"
+// @Success 200 {object} dto.UserResponse "Профиль пользователя"
+// @Failure 400 {object} map[string]string "Проблема с авторизацией/получением user_id"}
+// @Failure 403 {object} map[string]string "Пользователи не совпадают"
+// @Failure 404 {object} map[string]string "Пользователь не найден"
+// @Failure 500 {object} map[string]string "Внутренняя ошибка сервера"
+// @Security ApiKeyAuth
+// @Router /users/{login}/profile [get]
 func (h *Handler) GetProfile(ctx *gin.Context) {
-	userID := h.Repository.GetUserID()
-	if userID == 0 {
-		h.errorHandler(ctx, http.StatusUnauthorized, fmt.Errorf("user not authenticated"))
+	userID, err := getUserID(ctx)
+	if err != nil {
+		h.errorHandler(ctx, http.StatusBadRequest, err)
 		return
 	}
 
-	user, err := h.Repository.GetUserByID(userID)
-	if err != nil {
-		if errors.Is(err, repository.ErrNotFound) {
-			h.errorHandler(ctx, http.StatusNotFound, err)
-		} else {
-			h.errorHandler(ctx, http.StatusInternalServerError, err)
-		}
+	login := ctx.Param("login")
+
+	user, err := h.Repository.GetUserByLogin(login)
+	if err == repository.ErrNotFound {
+		h.errorHandler(ctx, http.StatusNotFound, err)
 		return
 	}
+	if err != nil {
+		h.errorHandler(ctx, http.StatusInternalServerError, err)
+		return
+	}
+
+	if user.ID != userID {
+		h.errorHandler(ctx, http.StatusForbidden, errors.New("users do not match"))
+		return
+	}
+
+	user.Password=""
+
 	ctx.JSON(http.StatusOK, dto.UserResponse{
 		ID: user.ID,
 		Login: user.Login,
@@ -108,12 +128,29 @@ func (h *Handler) GetProfile(ctx *gin.Context) {
 	})
 }
 
+// UpdateProfile
+// @Summary Изменить профиль пользователя
+// @Description Обновляет профиль пользователя (может делать только сам пользователь).
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param login path string true "Логин пользователя"
+// @Param user body ds.User true "Новые данные профиля"
+// @Success 200 {object} dto.UserResponse "Обновлённый профиль"
+// @Failure 400 {object} map[string]string "Ошибка запроса или авторизации"
+// @Failure 403 {object} map[string]string "Доступ запрещён"
+// @Failure 404 {object} map[string]string "Пользователь не найден"
+// @Failure 500 {object} map[string]string "Внутренняя ошибка сервера"
+// @Security ApiKeyAuth
+// @Router /users/{login}/profile [put]
 func (h *Handler) UpdateProfile(ctx *gin.Context) {
-	userID := h.Repository.GetUserID()
-	if userID == 0 {
-		h.errorHandler(ctx, http.StatusUnauthorized, fmt.Errorf("user not authenticated"))
+	userID, err := getUserID(ctx)
+	if err != nil {
+		h.errorHandler(ctx, http.StatusBadRequest, err)
 		return
 	}
+
+	login := ctx.Param("login")
 
 	var userJSON ds.User
 	if err := ctx.BindJSON(&userJSON); err != nil {
@@ -121,13 +158,27 @@ func (h *Handler) UpdateProfile(ctx *gin.Context) {
 		return
 	}
 
-	user, err := h.Repository.UpdateProfile(userID, userJSON)
+	user, err := h.Repository.GetUserByLogin(login)
+	if err == repository.ErrNotFound {
+		h.errorHandler(ctx, http.StatusNotFound, err)
+		return
+	}
 	if err != nil {
-		if errors.Is(err, repository.ErrNotFound) {
-			h.errorHandler(ctx, http.StatusNotFound, err)
-		} else {
-			h.errorHandler(ctx, http.StatusInternalServerError, err)
-		}
+		h.errorHandler(ctx, http.StatusInternalServerError, err)
+		return
+	}
+	if user.ID != userID {
+		h.errorHandler(ctx, http.StatusForbidden, err)
+		return
+	}
+
+	user, err = h.Repository.UpdateProfile(login, userJSON)
+	if err == repository.ErrNotFound {
+		h.errorHandler(ctx, http.StatusNotFound, err)
+		return
+	}
+	if err != nil {
+		h.errorHandler(ctx, http.StatusInternalServerError, err)
 		return
 	}
 	ctx.JSON(http.StatusOK, dto.UserResponse{
@@ -137,9 +188,94 @@ func (h *Handler) UpdateProfile(ctx *gin.Context) {
 	})
 }
 
+// SignOut
+// @Summary Выход (удаление токена)
+// @Description Удаляет токен текущего пользователя из хранилища. Возвращает {"status":"signed_out"}.
+// @Tags users
+// @Produce json
+// @Success 200 {object} map[string]string "status"
+// @Failure 400 {object} map[string]string "Проблема с получением user_id"
+// @Failure 500 {object} map[string]string "Внутренняя ошибка при удалении токена"
+// @Security ApiKeyAuth
+// @Router /users/sign-out [post]
 func (h *Handler) SignOut(ctx *gin.Context) {
-	//h.Repository.SignOut()
-	ctx.JSON(http.StatusOK, gin.H{
-		"status": "signed_out",
+	tokenString := extractTokenFromHeader(ctx.Request)
+	if tokenString == "" {
+		h.errorHandler(ctx, http.StatusUnauthorized, errors.New("no token provided"))
+		return
+	}
+
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return []byte(os.Getenv("JWT_KEY")), nil
 	})
+
+	if err != nil || token == nil {
+		h.errorHandler(ctx, http.StatusUnauthorized, err)
+		return
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		h.errorHandler(ctx, http.StatusBadRequest, errors.New("invalid token claims"))
+		return
+	}
+
+	ttl, err := tokenTTLFromClaims(claims)
+	if err != nil {
+		ctx.JSON(http.StatusOK, gin.H{"status": "signed_out"})
+		return
+	}
+
+	err = h.Repository.AddTokenToBlacklist(context.Background(), tokenString, ttl)
+	if err != nil {
+		h.errorHandler(ctx, http.StatusInternalServerError, err)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{"status": "signed_out"})
+}
+
+func getUserID(ctx *gin.Context) (uuid.UUID, error) {
+	userIDStr, exits := ctx.Get("user_id")
+	if !exits {
+		return uuid.UUID{}, errors.New("user_id not found")
+	}
+	userID, err := uuid.Parse(userIDStr.(string))
+	if err != nil {
+		return uuid.UUID{}, err
+	}
+	return userID, nil
+}
+
+func tokenTTLFromClaims(claims jwt.MapClaims) (time.Duration, error) {
+	expVal, ok := claims["exp"]
+	if !ok {
+		return 0, errors.New("exp not present")
+	}
+
+	var expUnix int64
+	switch v := expVal.(type) {
+	case float64:
+		expUnix = int64(v)
+	case int64:
+		expUnix = v
+	case json.Number:
+		i, err := v.Int64()
+		if err != nil {
+			return 0, err
+		}
+		expUnix = i
+	default:
+		return 0, fmt.Errorf("unsupported exp type %T", v)
+	}
+
+	expTime := time.Unix(expUnix, 0)
+	ttl := time.Until(expTime)
+	if ttl < 0 {
+		return 0, errors.New("token already expired")
+	}
+	return ttl, nil
 }

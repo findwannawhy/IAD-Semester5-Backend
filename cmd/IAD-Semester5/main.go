@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 
+	_ "github.com/findwannawhy/IAD-Semester5/docs"
 	"github.com/findwannawhy/IAD-Semester5/internal/app/config"
 	"github.com/findwannawhy/IAD-Semester5/internal/app/dsn"
 	"github.com/findwannawhy/IAD-Semester5/internal/app/handler"

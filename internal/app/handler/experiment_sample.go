@@ -11,6 +11,20 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// DeleteSampleFromExperiment godoc
+// @Summary Удалить образец из исследования
+// @Description Удаляет связь образца и исследования
+// @Tags experiments-samples
+// @Produce json
+// @Param id path int true "ID исследования"
+// @Param sample_id path int true "ID образца"
+// @Success 200 {object} dto.DeleteExperimentSampleResp "Обновленное исследование"
+// @Failure 400 {object} map[string]string "Неверные ID"
+// @Failure 403 {object} map[string]string "Доступ запрещен"
+// @Failure 404 {object} map[string]string "Не найдено"
+// @Failure 500 {object} map[string]string "Внутренняя ошибка сервера"
+// @Security ApiKeyAuth
+// @Router /impurity-experiments/{id}/soluble-samples/{sample_id} [delete]
 func (h *Handler) DeleteSampleFromExperiment(ctx *gin.Context) {
   experimentID, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
@@ -50,11 +64,21 @@ func (h *Handler) DeleteSampleFromExperiment(ctx *gin.Context) {
 	})
 }
 
-type updateExperimentSampleRequest struct {
-	SampleMass       *float64 `json:"sample_mass"`
-	EvolvedGasVolume *float64 `json:"evolved_gas_volume"`
-}
-
+// UpdateExperimentSample godoc
+// @Summary Изменить данные образца в исследовании
+// @Description Обновляет параметры образца в конкретном исследовании
+// @Tags experiments-samples
+// @Accept json
+// @Produce json
+// @Param id path int true "ID исследования"
+// @Param sample_id path int true "ID образца"
+// @Param data body dto.UpdateExperimentSampleReq true "Новые данные"
+// @Success 200 {object} ds.ExperimentSample "Обновленные данные"
+// @Failure 400 {object} map[string]string "Неверные данные"
+// @Failure 404 {object} map[string]string "Не найдено"
+// @Failure 500 {object} map[string]string "Внутренняя ошибка сервера"
+// @Security ApiKeyAuth
+// @Router /impurity-experiments/{id}/soluble-samples/{sample_id} [put]
 func (h *Handler) UpdateExperimentSample(ctx *gin.Context) {
   experimentID, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
@@ -68,7 +92,7 @@ func (h *Handler) UpdateExperimentSample(ctx *gin.Context) {
 		return
 	}
 
-	var req updateExperimentSampleRequest
+	var req dto.UpdateExperimentSampleReq
 	if err := ctx.BindJSON(&req); err != nil {
 		h.errorHandler(ctx, http.StatusBadRequest, err)
 		return

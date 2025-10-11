@@ -63,3 +63,7 @@ type ModerateExperiment struct {
 	CreatorLogin string      `json:"creator_login"`
 	ModeratorLogin string    `json:"moderator_login"`
 }
+
+type StatusJSON struct {
+	Status string `json:"status"`
+}

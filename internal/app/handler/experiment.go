@@ -10,10 +10,24 @@ import (
 	"github.com/findwannawhy/IAD-Semester5/internal/app/ds"
 	"github.com/findwannawhy/IAD-Semester5/internal/app/dto"
 	"github.com/findwannawhy/IAD-Semester5/internal/app/repository"
+	"github.com/google/uuid"
 
 	"github.com/gin-gonic/gin"
 )
 
+// GetExperiments godoc
+// @Summary Получить список исследований
+// @Description Возвращает исследования с возможностью фильтрации по датам и статусу
+// @Tags impurity-experiments
+// @Produce json
+// @Param from-date query string false "Начальная дата (YYYY-MM-DD)"
+// @Param to-date query string false "Конечная дата (YYYY-MM-DD)"
+// @Param status query string false "Статус исследования"
+// @Success 200 {array} dto.ExperimentsResponse "Список исследований"
+// @Failure 400 {object} map[string]string "Неверный формат даты"
+// @Failure 500 {object} map[string]string "Внутренняя ошибка сервера"
+// @Security ApiKeyAuth
+// @Router /impurity-experiments [get]
 func (h *Handler) GetExperiments(ctx *gin.Context) {
 	fromDate := ctx.Query("from-date")
 	var from = time.Time{}
@@ -26,7 +40,6 @@ func (h *Handler) GetExperiments(ctx *gin.Context) {
 		}
 		from = from1
 	}
-	fmt.Println(fromDate)
 
 	toDate := ctx.Query("to-date")
 	if toDate != "" {
@@ -45,6 +58,8 @@ func (h *Handler) GetExperiments(ctx *gin.Context) {
 		h.errorHandler(ctx, http.StatusInternalServerError, err)
 		return
 	}
+
+	experiments = h.filterExperimentsByAuth(experiments, ctx)
 
 	resp := make([]dto.ExperimentsResponse, 0, len(experiments))
 	for _, experiment := range experiments {
@@ -73,8 +88,23 @@ func (h *Handler) GetExperiments(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, resp)
 }
 
+// GetExperimentCart godoc
+// @Summary Получить корзину исследования
+// @Description Возвращает информацию о текущем черновике исследования пользователя
+// @Tags impurity-experiments
+// @Produce json
+// @Success 200 {object} dto.DraftExperimentResponse "Данные корзины исследования"
+// @Failure 400 {object} map[string]string "Неверный запрос"
+// @Failure 500 {object} map[string]string "Внутренняя ошибка сервера"
+// @Security ApiKeyAuth
+// @Router /impurity-experiments/draft [get]
 func (h *Handler) GetExperimentCart(ctx *gin.Context) {
-	samplesCount := h.Repository.GetExperimentCount(h.Repository.GetUserID())
+	userID, err := getUserID(ctx)
+	if err != nil {
+		h.errorHandler(ctx, http.StatusBadRequest, err)
+		return
+	}
+	samplesCount := h.Repository.GetExperimentCount(userID)
 
 	if samplesCount == 0 {
 		ctx.JSON(http.StatusOK, dto.DraftExperimentResponse{
@@ -84,7 +114,7 @@ func (h *Handler) GetExperimentCart(ctx *gin.Context) {
 		return
 	}
 
-	experiment, err := h.Repository.CheckCurrentExperimentDraft(h.Repository.GetUserID())
+	experiment, err := h.Repository.CheckCurrentExperimentDraft(userID)
 	if err != nil {
 		if errors.Is(err, repository.ErrNotAllowed) {
 			h.errorHandler(ctx, http.StatusUnauthorized, err)
@@ -105,6 +135,19 @@ func (h *Handler) GetExperimentCart(ctx *gin.Context) {
 	})
 }
 
+// GetExperiment godoc
+// @Summary Получить исследование по ID
+// @Description Возвращает полную информацию об исследовании включая образцы
+// @Tags impurity-experiments
+// @Produce json
+// @Param id path int true "ID исследования"
+// @Success 200 {object} dto.ExperimentResponse "Данные исследования с образцами"
+// @Failure 400 {object} map[string]string "Неверный ID"
+// @Failure 403 {object} map[string]string "Доступ запрещен"
+// @Failure 404 {object} map[string]string "Исследование не найдено"
+// @Failure 500 {object} map[string]string "Внутренняя ошибка сервера"
+// @Security ApiKeyAuth
+// @Router /impurity-experiments/{id} [get]
 func (h *Handler) GetExperiment(ctx *gin.Context) {
 	idStr := ctx.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 64)
@@ -190,6 +233,19 @@ func (h *Handler) GetExperiment(ctx *gin.Context) {
 	})
 }
 
+// FormExperiment godoc
+// @Summary Сформировать исследование
+// @Description Переводит исследование в статус "formed"
+// @Tags impurity-experiments
+// @Produce json
+// @Param id path int true "ID исследования"
+// @Success 200 {object} dto.FormExperiment "Сформированное исследование"
+// @Failure 400 {object} map[string]string "Неверный запрос"
+// @Failure 403 {object} map[string]string "Доступ запрещен"
+// @Failure 404 {object} map[string]string "Исследование не найдено"
+// @Failure 500 {object} map[string]string "Внутренняя ошибка сервера"
+// @Security ApiKeyAuth
+// @Router /impurity-experiments/{id}/form [put]
 func (h *Handler) FormExperiment(ctx *gin.Context) {
 	idStr := ctx.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 64)
@@ -224,6 +280,20 @@ func (h *Handler) FormExperiment(ctx *gin.Context) {
 	})
 }
 
+// UpdateExperiment godoc
+// @Summary Изменить исследование
+// @Description Обновляет данные исследования
+// @Tags impurity-experiments
+// @Accept json
+// @Produce json
+// @Param id path int true "ID исследования"
+// @Param experiment body ds.ImpurityFractionExperiment true "Новые данные исследования"
+// @Success 200 {object} dto.UpdateExperiment "Обновленное исследование"
+// @Failure 400 {object} map[string]string "Неверные данные"
+// @Failure 404 {object} map[string]string "Исследование не найдено"
+// @Failure 500 {object} map[string]string "Внутренняя ошибка сервера"
+// @Security ApiKeyAuth
+// @Router /impurity-experiments/{id} [put]
 func (h *Handler) UpdateExperiment(ctx *gin.Context) {
 	idStr := ctx.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 64)
@@ -260,6 +330,19 @@ func (h *Handler) UpdateExperiment(ctx *gin.Context) {
 	})
 }
 
+// SoftDeleteExperiment godoc
+// @Summary Удалить исследование
+// @Description Выполняет логическое удаление исследования
+// @Tags impurity-experiments
+// @Produce json
+// @Param id path int true "ID исследования"
+// @Success 200 {object} dto.SoftDeleteExperiment "Статус удаления"
+// @Failure 400 {object} map[string]string "Неверный запрос"
+// @Failure 403 {object} map[string]string "Доступ запрещен"
+// @Failure 404 {object} map[string]string "Исследование не найдено"
+// @Failure 500 {object} map[string]string "Внутренняя ошибка сервера"
+// @Security ApiKeyAuth
+// @Router /impurity-experiments/{id} [delete]
 func (h *Handler) SoftDeleteExperiment(ctx *gin.Context) {
 	idStr := ctx.Param("id")
 	experimentId, err := strconv.ParseUint(idStr, 10, 64)
@@ -296,43 +379,124 @@ func (h *Handler) SoftDeleteExperiment(ctx *gin.Context) {
 	})
 }
 
+// ModerateExperiment godoc
+// @Summary Модерировать исследование
+// @Description Изменяет статус исследования (только для модераторов)
+// @Tags impurity-experiments
+// @Accept json
+// @Produce json
+// @Param id path int true "ID исследования"
+// @Param status body dto.StatusJSON true "Новый статус"
+// @Success 200 {object} dto.ModerateExperiment "Результат модерации"
+// @Failure 400 {object} map[string]string "Неверный запрос"
+// @Failure 403 {object} map[string]string "Доступ запрещен"
+// @Failure 404 {object} map[string]string "Исследование не найдено"
+// @Failure 500 {object} map[string]string "Внутренняя ошибка сервера"
+// @Security ApiKeyAuth
+// @Router /impurity-experiments/{id}/moderation [put]
 func (h *Handler) ModerateExperiment(ctx *gin.Context) {
+	userID, err := getUserID(ctx)
+	if err != nil {
+			h.errorHandler(ctx, http.StatusBadRequest, err)
+			return
+	}
+
 	idStr := ctx.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 64)
 	if err != nil {
-		h.errorHandler(ctx, http.StatusBadRequest, err)
-		return
+			h.errorHandler(ctx, http.StatusBadRequest, err)
+			return
 	}
 
-	var statusJSON struct {
-		Status string `json:"status"`
-	}
+	var statusJSON dto.StatusJSON
 	if err := ctx.BindJSON(&statusJSON); err != nil {
-		h.errorHandler(ctx, http.StatusBadRequest, err)
-		return
+			h.errorHandler(ctx, http.StatusBadRequest, err)
+			return
 	}
 
-	experiment, err := h.Repository.ModerateExperiment(uint(id), statusJSON.Status)
+	user, err := h.Repository.GetUserByID(userID)
 	if err != nil {
-		if errors.Is(err, repository.ErrNotFound) {
-			h.errorHandler(ctx, http.StatusNotFound, err)
-		} else if errors.Is(err, repository.ErrNotAllowed) {
-			h.errorHandler(ctx, http.StatusForbidden, err)
-		} else {
-			h.errorHandler(ctx, http.StatusInternalServerError, err)
-		}
-		return
+			if errors.Is(err, repository.ErrNotFound) {
+					h.errorHandler(ctx, http.StatusNotFound, err)
+			} else {
+					h.errorHandler(ctx, http.StatusInternalServerError, err)
+			}
+			return
+	}
+	
+	if !user.IsModerator {
+			h.errorHandler(ctx, http.StatusForbidden, errors.New("требуются права модератора"))
+			return
+	}
+
+	experiment, err := h.Repository.ModerateExperiment(uint(id), statusJSON.Status, userID)
+	if err != nil {
+			if errors.Is(err, repository.ErrNotFound) {
+					h.errorHandler(ctx, http.StatusNotFound, err)
+			} else if errors.Is(err, repository.ErrNotAllowed) {
+					h.errorHandler(ctx, http.StatusForbidden, err)
+			} else {
+					h.errorHandler(ctx, http.StatusInternalServerError, err)
+			}
+			return
 	}
 
 	creatorLogin, moderatorLogin, err := h.Repository.GetModeratorAndCreatorLogin(experiment)
 	if err != nil {
-		h.errorHandler(ctx, http.StatusInternalServerError, err)
-		return
+			h.errorHandler(ctx, http.StatusInternalServerError, err)
+			return
 	}
 
 	ctx.JSON(http.StatusOK, dto.ModerateExperiment{
-		Experiment:     experiment,
-		CreatorLogin:   creatorLogin,
+		Experiment: experiment,
+		CreatorLogin: creatorLogin,
 		ModeratorLogin: moderatorLogin,
 	})
+}
+
+func (h *Handler) filterExperimentsByAuth(experiments []ds.ImpurityFractionExperiment, ctx *gin.Context) []ds.ImpurityFractionExperiment {
+userID, err := getUserID(ctx)
+if err != nil {
+	return []ds.ImpurityFractionExperiment{}
+}
+
+user, err := h.Repository.GetUserByID(userID)
+if err == repository.ErrNotFound {
+	return []ds.ImpurityFractionExperiment{}
+}
+if err != nil {
+	return []ds.ImpurityFractionExperiment{}
+}
+
+if user.IsModerator {
+	return experiments
+}
+
+var userExperiments []ds.ImpurityFractionExperiment
+	for _, experiment := range experiments {
+			fmt.Println(experiment.ID)
+			if experiment.CreatorID == userID {
+					userExperiments = append(userExperiments, experiment)
+			}
+	}
+	
+	return userExperiments
+
+}
+
+func (h *Handler) hasAccessToExperiment(creatorID uuid.UUID, ctx *gin.Context) bool {
+userID, err := getUserID(ctx)
+if err != nil {
+	return false
+}
+
+user, err := h.Repository.GetUserByID(userID)
+if err == repository.ErrNotFound {
+	return false
+}
+if err != nil {
+	return false
+}
+
+return creatorID == userID || user.IsModerator
 }

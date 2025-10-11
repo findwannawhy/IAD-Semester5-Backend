@@ -6,11 +6,10 @@ import (
 	"time"
 
 	"github.com/findwannawhy/IAD-Semester5/internal/app/ds"
+	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
-
-var errNoDraft = errors.New("no draft found")
 
 func (r *Repository) GetExperiments(from, to time.Time, status string) ([]ds.ImpurityFractionExperiment, error) {
 	var experiments []ds.ImpurityFractionExperiment
@@ -71,7 +70,7 @@ func (r *Repository) GetExperimentSamplesData(id uint) ([]ds.AcidSolubleSample, 
 	return samples, experiment, nil
 }
 
-func (r *Repository) CheckCurrentExperimentDraft(creatorID uint) (ds.ImpurityFractionExperiment, error) {	
+func (r *Repository) CheckCurrentExperimentDraft(creatorID uuid.UUID) (ds.ImpurityFractionExperiment, error) {	
 	var experiment ds.ImpurityFractionExperiment
 	res := r.db.Where("creator_id = ? AND status = ?", creatorID, "draft").Limit(1).Find(&experiment)
 	if res.Error != nil {
@@ -82,7 +81,7 @@ func (r *Repository) CheckCurrentExperimentDraft(creatorID uint) (ds.ImpurityFra
 	return experiment, nil
 }
 
-func (r *Repository) GetExperimentDraft(creatorID uint) (ds.ImpurityFractionExperiment, bool, error) {
+func (r *Repository) GetExperimentDraft(creatorID uuid.UUID) (ds.ImpurityFractionExperiment, bool, error) {
 	experiment, err := r.CheckCurrentExperimentDraft(creatorID)
 	if errors.Is(err, ErrNoDraft) {
 		experiment = ds.ImpurityFractionExperiment{
@@ -101,8 +100,8 @@ func (r *Repository) GetExperimentDraft(creatorID uint) (ds.ImpurityFractionExpe
 	return experiment, true, nil
 }
 
-func (r *Repository) GetExperimentCount(creatorID uint) int64 {
-	if creatorID == 0 {
+func (r *Repository) GetExperimentCount(creatorID uuid.UUID) int64 {
+	if creatorID == uuid.Nil {
 			return 0
 	}
 		
@@ -224,25 +223,16 @@ func CalculateMassFraction(
 	return massFractionPercentage, nil
 }
 
-func (r *Repository) ModerateExperiment(id uint, status string) (ds.ImpurityFractionExperiment, error) {
+func (r *Repository) ModerateExperiment(id uint, status string, currUserId uuid.UUID) (ds.ImpurityFractionExperiment, error) {
 	if status != "finished" && status != "rejected" {
 		return ds.ImpurityFractionExperiment{}, errors.New("неверный статус")
-	}
-
-	user, err := r.GetUserByID(r.GetUserID())
-	if err != nil {
-		return ds.ImpurityFractionExperiment{}, err
-	}
-
-	if !user.IsModerator {
-		return ds.ImpurityFractionExperiment{}, fmt.Errorf("%w: вы не модератор", ErrNotAllowed)
 	}
 
 	experiment, err := r.GetSingleExperiment(id)
 	if err != nil {
 		return ds.ImpurityFractionExperiment{}, err
 	} else if experiment.Status != "formed" {
-		return ds.ImpurityFractionExperiment{}, fmt.Errorf("это исследование не может быть %s", status)
+		return ds.ImpurityFractionExperiment{}, errors.New("this experiment can not be " + status)
 	}
 
 	if status == "finished" {
@@ -272,7 +262,7 @@ func (r *Repository) ModerateExperiment(id uint, status string) (ds.ImpurityFrac
 	err = r.db.Model(&experiment).Updates(ds.ImpurityFractionExperiment{
 		Status: status,
 		FinishedAt: &now,
-		ModeratorID: &user.ID,
+		ModeratorID: &currUserId,
 	}).Error
 	if err != nil {
 		return ds.ImpurityFractionExperiment{}, err

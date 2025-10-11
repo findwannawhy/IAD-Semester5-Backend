@@ -1,9 +1,16 @@
 package repository
 
 import (
+	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
+	"os"
+	"time"
 
 	minioClient "github.com/findwannawhy/IAD-Semester5/internal/app/minio"
+
+	"github.com/go-redis/redis"
 	"github.com/minio/minio-go/v7"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -19,7 +26,7 @@ var (
 type Repository struct {
 	db *gorm.DB
 	mc *minio.Client
-	userId uint
+	rd *redis.Client
 }
 
 func NewRepository(dsn string) (*Repository, error) {
@@ -33,21 +40,46 @@ func NewRepository(dsn string) (*Repository, error) {
 		return nil, err
 	}
 
+	rd := redis.NewClient(&redis.Options{
+		Addr:     os.Getenv("REDIS_HOST") + ":" + os.Getenv("REDIS_PORT"),
+		Password: os.Getenv("REDIS_PASSWORD"),
+		DB:       0,
+	})
+
 	return &Repository{
 		db: db,
 		mc: mc,
-		userId: 1,
+		rd: rd,
 	}, nil
 }
 
-func (r *Repository) GetUserID() (uint) {
-	return r.userId
+
+func (r *Repository) GetToken(userID string) (string, error) {
+	token, err := r.rd.Get(userID).Result()
+	if err != nil {
+		return "", err
+	}
+	return token, nil
 }
 
-func (r *Repository) SetUserID(id uint) {
-	r.userId = id
+func blacklistKeyForToken(tokenString string) string {
+	h := sha256.Sum256([]byte(tokenString))
+	return "blacklist:" + hex.EncodeToString(h[:])
 }
 
-func (r *Repository) SignOut() {
-	r.userId = 0
+func (r *Repository) AddTokenToBlacklist(ctx context.Context, tokenString string, ttl time.Duration) error {
+	if ttl <= 0 {
+		return nil
+	}
+	key := blacklistKeyForToken(tokenString)
+	return r.rd.Set(key, "1", ttl).Err()
+}
+
+func (r *Repository) IsTokenBlacklisted(ctx context.Context, tokenString string) (bool, error) {
+	key := blacklistKeyForToken(tokenString)
+	n, err := r.rd.Exists(key).Result()
+	if err != nil {
+		return false, err
+	}
+	return n > 0, nil
 }

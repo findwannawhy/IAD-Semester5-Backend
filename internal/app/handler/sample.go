@@ -13,6 +13,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// GetSamples godoc
+// @Summary Получить список образцов
+// @Description Возвращает все образцы или фильтрует по названию
+// @Tags soluble-samples
+// @Produce json
+// @Param search_sample query string false "Название образца для поиска"
+// @Success 200 {array} ds.AcidSolubleSample "Список образцов"
+// @Failure 500 {object} map[string]string "Внутренняя ошибка сервера"
+// @Router /soluble-samples [get]
 func (h *Handler) GetSamples(ctx *gin.Context) {
 	var samples []ds.AcidSolubleSample
 	var err error
@@ -37,6 +46,17 @@ func (h *Handler) GetSamples(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, samples)
 }
 
+// GetSample godoc
+// @Summary Получить образец по ID
+// @Description Возвращает информацию о образце по её идентификатору
+// @Tags soluble-samples
+// @Produce json
+// @Param id path int true "ID образца"
+// @Success 200 {object} ds.AcidSolubleSample "Данные образца"
+// @Failure 400 {object} map[string]string "Неверный ID"
+// @Failure 404 {object} map[string]string "Образец не найден"
+// @Failure 500 {object} map[string]string "Внутренняя ошибка сервера"
+// @Router /soluble-samples/{id} [get]
 func (h *Handler) GetSample(ctx *gin.Context) {
 	idStr := ctx.Param("id")
 	id64, err := strconv.ParseUint(idStr, 10, 64)
@@ -59,6 +79,18 @@ func (h *Handler) GetSample(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, sample)
 }
 
+// CreateSample godoc
+// @Summary Создать новый образец
+// @Description Создает новый образец и возвращает его данные
+// @Tags soluble-samples
+// @Accept json
+// @Produce json
+// @Param sample body ds.AcidSolubleSample true "Данные нового образца"
+// @Success 201 {object} ds.AcidSolubleSample "Созданный образец"
+// @Failure 400 {object} map[string]string "Неверные данные"
+// @Failure 500 {object} map[string]string "Внутренняя ошибка сервера"
+// @Security ApiKeyAuth
+// @Router /soluble-samples [post]
 func (h *Handler) CreateSample(ctx *gin.Context) {
 	var sampleJSON ds.AcidSolubleSample
 	if err := ctx.BindJSON(&sampleJSON); err != nil {
@@ -75,6 +107,18 @@ func (h *Handler) CreateSample(ctx *gin.Context) {
 	ctx.JSON(http.StatusCreated, sample)
 }
 
+// DeleteSample godoc
+// @Summary Удалить образец
+// @Description Выполняет логическое удаление образца по ID
+// @Tags soluble-samples
+// @Produce json
+// @Param id path int true "ID образца"
+// @Success 200 {object} map[string]string "Статус удаления"
+// @Failure 400 {object} map[string]string "Неверный ID"
+// @Failure 404 {object} map[string]string "Образец не найден"
+// @Failure 500 {object} map[string]string "Внутренняя ошибка сервера"
+// @Security ApiKeyAuth
+// @Router /soluble-samples/{id} [delete]
 func (h *Handler) SoftDeleteSample(ctx *gin.Context) {
 	idStr := ctx.Param("id")
 	id64, err := strconv.ParseUint(idStr, 10, 64)
@@ -100,6 +144,20 @@ func (h *Handler) SoftDeleteSample(ctx *gin.Context) {
 	})
 }
 
+// UpdateSample godoc
+// @Summary Изменить данные образца
+// @Description Обновляет информацию о образце по ID
+// @Tags soluble-samples
+// @Accept json
+// @Produce json
+// @Param id path int true "ID образца"
+// @Param sample body ds.AcidSolubleSample true "Новые данные образца"
+// @Success 200 {object} ds.AcidSolubleSample "Обновленный образец"
+// @Failure 400 {object} map[string]string "Неверные данные"
+// @Failure 404 {object} map[string]string "Образец не найден"
+// @Failure 500 {object} map[string]string "Внутренняя ошибка сервера"
+// @Security ApiKeyAuth
+// @Router /soluble-samples/{id} [put]
 func (h *Handler) UpdateSample(ctx *gin.Context) {
 	var sampleJSON ds.AcidSolubleSample
 	if err := ctx.BindJSON(&sampleJSON); err != nil {
@@ -127,13 +185,26 @@ func (h *Handler) UpdateSample(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, sample)
 }
 
+// AddSampleToExperimentDraft godoc
+// @Summary Добавить образец в черновик исследования
+// @Description Добавляет образец в черновик исследования пользователя
+// @Tags soluble-samples
+// @Produce json
+// @Param id path int true "ID образца"
+// @Success 200 {object} dto.AddSampleToExperiment "Исследование с добавленным образцом"
+// @Success 201 {object} dto.AddSampleToExperiment "Создано новое исследование"
+// @Failure 400 {object} map[string]string "Неверный запрос"
+// @Failure 404 {object} map[string]string "Образец не найден"
+// @Failure 409 {object} map[string]string "Образец уже в исследовании"
+// @Failure 500 {object} map[string]string "Внутренняя ошибка сервера"
+// @Security ApiKeyAuth
+// @Router /soluble-samples/{id}/experiments/draft [post]
 func (h *Handler) AddSampleToExperimentDraft(ctx *gin.Context) {
-	userID := h.Repository.GetUserID()
-	if userID == 0 {
-		h.errorHandler(ctx, http.StatusUnauthorized, errors.New("user not authenticated"))
+	userID, err := getUserID(ctx)
+	if err != nil {
+		h.errorHandler(ctx, http.StatusBadRequest, err)
 		return
 	}
-
 	experiment, created, err := h.Repository.GetExperimentDraft(userID)
 	if err != nil {
 		h.errorHandler(ctx, http.StatusInternalServerError, err)
@@ -181,6 +252,21 @@ func (h *Handler) AddSampleToExperimentDraft(ctx *gin.Context) {
 	})
 }
 
+
+// UpdateImage godoc
+// @Summary Загрузить изображение для образца
+// @Description Загружает изображение для образца и возвращает обновленные данные
+// @Tags soluble-samples
+// @Accept multipart/form-data
+// @Produce json
+// @Param id path int true "ID образца"
+// @Param image formData file true "Изображение образца"
+// @Success 200 {object} map[string]interface{} "Статус загрузки и данные образца"
+// @Failure 400 {object} map[string]string "Неверный запрос или файл"
+// @Failure 404 {object} map[string]string "Образец не найден"
+// @Failure 500 {object} map[string]string "Внутренняя ошибка сервера"
+// @Security ApiKeyAuth
+// @Router /soluble-samples/{id}/image [post]
 func (h *Handler) UpdateImage(ctx *gin.Context) {
 	sampleId64, err := strconv.ParseUint(ctx.Param("id"), 10, 64)
 	if err != nil {
