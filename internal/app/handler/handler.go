@@ -41,35 +41,35 @@ func (h *Handler) RegisterHandler(router *gin.Engine) {
 
 	unauthorized.POST("/users/sign-up", h.SignUp)
 	unauthorized.POST("/users/sign-in", h.SignIn)
-	unauthorized.GET("/api/soluble-samples", h.GetSamples) // список образцов
-	unauthorized.GET("/api/soluble-samples/:id", h.GetSample) // получить образец по id
+	unauthorized.GET("/soluble-samples", h.GetSamples) // список образцов
+	unauthorized.GET("/soluble-samples/:id", h.GetSample) // получить образец по id
 
 	authorized := api.Group("/")
 	authorized.Use(h.ModeratorMiddleware(false))
 
-	authorized.POST("/api/soluble-samples", h.CreateSample) // создать образец
-	authorized.PUT("/api/soluble-samples/:id", h.UpdateSample) // обновить образец
-	authorized.DELETE("/api/soluble-samples/:id", h.SoftDeleteSample) // удалить образец (soft)
-	authorized.POST("/api/soluble-samples/:id/impurity-experiments/draft", h.AddSampleToExperimentDraft) // добавить образец в корзину
-	authorized.POST("/api/soluble-samples/:id/image", h.UpdateImage) // обновить изображение образца
+	authorized.POST("/soluble-samples", h.CreateSample) // создать образец
+	authorized.PUT("/soluble-samples/:id", h.UpdateSample) // обновить образец
+	authorized.DELETE("/soluble-samples/:id", h.SoftDeleteSample) // удалить образец (soft)
+	authorized.POST("/soluble-samples/:id/impurity-experiments/draft", h.AddSampleToExperimentDraft) // добавить образец в корзину
+	authorized.POST("/soluble-samples/:id/image", h.UpdateImage) // обновить изображение образца
 
-	authorized.GET("/api/impurity-experiments/draft", h.GetExperimentDraft)	// текущий черновик пользователя
-	authorized.GET("/api/impurity-experiments", h.GetExperiments) // список экспериментов
-	authorized.GET("/api/impurity-experiments/:id", h.GetExperiment) // получить эксперимент по id
-	authorized.PUT("/api/impurity-experiments/:id", h.UpdateExperiment) // обновить эксперимент
-	authorized.PUT("/api/impurity-experiments/:id/formation", h.FormExperiment) // поменять статус эксперимента (user)
-	authorized.DELETE("/api/impurity-experiments/:id", h.SoftDeleteExperiment) // удалить эксперимент (soft)
+	authorized.GET("/impurity-experiments/draft", h.GetExperimentDraft)	// текущий черновик пользователя
+	authorized.GET("/impurity-experiments", h.GetExperiments) // список экспериментов
+	authorized.GET("/impurity-experiments/:id", h.GetExperiment) // получить эксперимент по id
+	authorized.PUT("/impurity-experiments/:id", h.UpdateExperiment) // обновить эксперимент
+	authorized.PUT("/impurity-experiments/:id/formation", h.FormExperiment) // поменять статус эксперимента (user)
+	authorized.DELETE("/impurity-experiments/:id", h.SoftDeleteExperiment) // удалить эксперимент (soft)
 
-	authorized.DELETE("/api/impurity-experiments/:id/soluble-samples/:sample_id", h.DeleteSampleFromExperiment) // удалить образец из эксперимента
-	authorized.PUT("/api/impurity-experiments/:id/soluble-samples/:sample_id", h.UpdateExperimentSample) // обновить позицию образца в эксперименте
+	authorized.DELETE("/impurity-experiments/:id/soluble-samples/:sample_id", h.DeleteSampleFromExperiment) // удалить образец из эксперимента
+	authorized.PUT("/impurity-experiments/:id/soluble-samples/:sample_id", h.UpdateExperimentSample) // обновить позицию образца в эксперименте
 
-	authorized.GET("/api/users/me", h.GetProfile) // профиль текущего пользователя
-	authorized.PUT("/api/users/me", h.UpdateProfile) // обновить профиль
-	authorized.POST("/api/users/sign-out", h.SignOut) // выход из системы
+	authorized.GET("/users/me", h.GetProfile) // профиль текущего пользователя
+	authorized.PUT("/users/me", h.UpdateProfile) // обновить профиль
+	authorized.POST("/users/sign-out", h.SignOut) // выход из системы
 
 	moderator := api.Group("/")
 	moderator.Use(h.ModeratorMiddleware(true))
-	moderator.PUT("/api/impurity-experiments/:id/moderation", h.ModerateExperiment) // поменять статус эксперимента (moderator)
+	moderator.PUT("/impurity-experiments/:id/moderation", h.ModerateExperiment) // поменять статус эксперимента (moderator)
 
 	swaggerURL := ginSwagger.URL("/swagger/doc.json")
 	router.Any("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, swaggerURL))
