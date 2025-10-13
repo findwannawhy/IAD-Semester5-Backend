@@ -18,7 +18,7 @@ import (
 // @Produce json
 // @Param id path int true "ID исследования"
 // @Param sample_id path int true "ID образца"
-// @Success 200 {object} dto.DeleteExperimentSampleResp "Обновленное исследование"
+// @Success 200 {object} dto.ExperimentResponse "Обновленное исследование"
 // @Failure 400 {object} map[string]string "Неверные ID"
 // @Failure 403 {object} map[string]string "Доступ запрещен"
 // @Failure 404 {object} map[string]string "Не найдено"
@@ -38,8 +38,9 @@ func (h *Handler) DeleteSampleFromExperiment(ctx *gin.Context) {
 		return
 	}
 
-	uintSampleID := uint(sampleID)
-	experiment, err := h.Repository.DeleteSampleFromExperiment(uint(experimentID), uintSampleID)
+	uintExperimentID := uint(experimentID)
+
+	err = h.Repository.DeleteSampleFromExperiment(uintExperimentID, uint(sampleID))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			h.errorHandler(ctx, http.StatusNotFound, err)
@@ -51,17 +52,13 @@ func (h *Handler) DeleteSampleFromExperiment(ctx *gin.Context) {
 		return
 	}
 
-	creatorLogin, _, err := h.Repository.GetModeratorAndCreatorLogin(experiment)
+	updatedExperiment, err := h.getExperimentData(uintExperimentID)
 	if err != nil {
 		h.errorHandler(ctx, http.StatusInternalServerError, err)
 		return
 	}
 
-	ctx.JSON(http.StatusOK, dto.DeleteExperimentSampleResp{
-		ExperimentID:   experiment.ID,
-		SampleID:       uintSampleID,
-		CreatorLogin:   creatorLogin,
-	})
+	ctx.JSON(http.StatusOK, updatedExperiment)
 }
 
 // UpdateExperimentSample godoc

@@ -9,24 +9,25 @@ import (
 	"gorm.io/gorm"
 )
 
-func (r *Repository) DeleteSampleFromExperiment(experimentId uint, sampleId uint) (ds.ImpurityFractionExperiment, error) {
-	var dbExperiment ds.ImpurityFractionExperiment
-	err := r.db.Where("id = ?", experimentId).First(&dbExperiment).Error
+func (r *Repository) DeleteSampleFromExperiment(experimentId uint, sampleId uint) error {
+	// Проверяем существование эксперимента
+	var exists bool
+	err := r.db.Model(&ds.ImpurityFractionExperiment{}).Select("count(*) > 0").Where("id = ?", experimentId).Find(&exists).Error
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return ds.ImpurityFractionExperiment{}, fmt.Errorf("%w: эксперимент с id %d", ErrNotFound, experimentId)
-		}
-		return ds.ImpurityFractionExperiment{}, err
+		return err
+	}
+	if !exists {
+		return fmt.Errorf("%w: эксперимент с id %d", ErrNotFound, experimentId)
 	}
 
 	result := r.db.Where("sample_id = ? and experiment_id = ?", sampleId, experimentId).Delete(&ds.ExperimentSample{})
 	if result.Error != nil {
-		return ds.ImpurityFractionExperiment{}, result.Error
+		return result.Error
 	}
 	if result.RowsAffected == 0 {
-		return ds.ImpurityFractionExperiment{}, fmt.Errorf("%w: образец с id %d не найден в эксперименте с id %d", ErrNotFound, sampleId, experimentId)
+		return fmt.Errorf("%w: образец с id %d не найден в эксперименте с id %d", ErrNotFound, sampleId, experimentId)
 	}
-	return dbExperiment, nil
+	return nil
 }
 
 func (r *Repository) UpdateExperimentSample(experimentId uint, sampleId uint, experimentSample ds.ExperimentSample) (ds.ExperimentSample, error) {

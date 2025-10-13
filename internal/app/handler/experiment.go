@@ -88,17 +88,17 @@ func (h *Handler) GetExperiments(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, resp)
 }
 
-// GetExperimentCart godoc
-// @Summary Получить корзину исследования
+// GetExperimentDraft godoc
+// @Summary Получить черновик исследования
 // @Description Возвращает информацию о текущем черновике исследования пользователя
 // @Tags impurity-experiments
 // @Produce json
-// @Success 200 {object} dto.DraftExperimentResponse "Данные корзины исследования"
+// @Success 200 {object} dto.DraftExperimentResponse "Данные черновика исследования"
 // @Failure 400 {object} map[string]string "Неверный запрос"
 // @Failure 500 {object} map[string]string "Внутренняя ошибка сервера"
 // @Security ApiKeyAuth
 // @Router /impurity-experiments/draft [get]
-func (h *Handler) GetExperimentCart(ctx *gin.Context) {
+func (h *Handler) GetExperimentDraft(ctx *gin.Context) {
 	userID, err := getUserID(ctx)
 	if err != nil {
 		h.errorHandler(ctx, http.StatusBadRequest, err)
@@ -156,7 +156,7 @@ func (h *Handler) GetExperiment(ctx *gin.Context) {
 		return
 	}
 
-	samples, experiment, err := h.Repository.GetExperimentSamplesData(uint(id))
+	response, err := h.getExperimentData(uint(id))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			h.errorHandler(ctx, http.StatusNotFound, err)
@@ -168,69 +168,7 @@ func (h *Handler) GetExperiment(ctx *gin.Context) {
 		return
 	}
 
-	creatorLogin, moderatorLogin, err := h.Repository.GetModeratorAndCreatorLogin(experiment)
-	if err != nil {
-		h.errorHandler(ctx, http.StatusInternalServerError, err)
-		return
-	}
-
-	// Получаем данные из experiments_samples для каждого образца
-	experimentSamples, err := h.Repository.GetExperimentSamples(experiment.ID)
-	if err != nil {
-		h.errorHandler(ctx, http.StatusInternalServerError, err)
-		return
-	}
-
-	// Создаем мапу для быстрого доступа к данным ExperimentSample по SampleID
-	experimentSampleMap := make(map[uint]ds.ExperimentSample)
-	for _, es := range experimentSamples {
-		experimentSampleMap[es.SampleID] = es
-	}
-
-	// Формируем ExperimentSampleCards
-	experimentSampleCards := make([]dto.ExperimentSampleCard, 0, len(samples))
-	for _, sample := range samples {
-		es := experimentSampleMap[sample.ID]
-		
-		sampleMass := ""
-		if es.SampleMass != nil {
-			sampleMass = fmt.Sprintf("%.2f", *es.SampleMass)
-		}
-		
-		evolvedGasVolume := ""
-		if es.EvolvedGasVolume != nil {
-			evolvedGasVolume = fmt.Sprintf("%.2f", *es.EvolvedGasVolume)
-		}
-		
-		massFractionPercentage := ""
-		if es.MassFractionPercentage != nil {
-			massFractionPercentage = fmt.Sprintf("%.2f", *es.MassFractionPercentage)
-		}
-
-		imageURL := ""
-		if sample.ImageURL != nil {
-			imageURL = *sample.ImageURL
-		}
-
-		experimentSampleCards = append(experimentSampleCards, dto.ExperimentSampleCard{
-			SampleID:                   sample.ID,
-			Title:                      sample.Title,
-			Formula:                    sample.Formula,
-			ImageURL:                   imageURL,
-			RelativeMolecularMass:      sample.RelativeMolecularMass,
-			StoichiometricCoefficient:  sample.StoichiometricCoefficient,
-			SampleMass:                 sampleMass,
-			EvolvedGasVolume:           evolvedGasVolume,
-			MassFractionPercentage:     massFractionPercentage,
-		})
-	}
-
-	ctx.JSON(http.StatusOK, dto.ExperimentResponse{
-		Experiment:            experiment,
-		ExperimentSampleCards: experimentSampleCards,
-		CreatorLogin:          creatorLogin,
-		ModeratorLogin:        moderatorLogin,
-	})
+	ctx.JSON(http.StatusOK, response)
 }
 
 // FormExperiment godoc
@@ -499,4 +437,70 @@ if err != nil {
 }
 
 return creatorID == userID || user.IsModerator
+}
+
+func (h *Handler) getExperimentData(id uint) (dto.ExperimentResponse, error) {
+	samples, experiment, err := h.Repository.GetExperimentSamplesData(id)
+	if err != nil {
+		return dto.ExperimentResponse{}, err
+	}
+
+	creatorLogin, moderatorLogin, err := h.Repository.GetModeratorAndCreatorLogin(experiment)
+	if err != nil {
+		return dto.ExperimentResponse{}, err
+	}
+
+	experimentSamples, err := h.Repository.GetExperimentSamples(experiment.ID)
+	if err != nil {
+		return dto.ExperimentResponse{}, err
+	}
+
+	experimentSampleMap := make(map[uint]ds.ExperimentSample)
+	for _, es := range experimentSamples {
+		experimentSampleMap[es.SampleID] = es
+	}
+
+	experimentSampleCards := make([]dto.ExperimentSampleCard, 0, len(samples))
+	for _, sample := range samples {
+		es := experimentSampleMap[sample.ID]
+		
+		sampleMass := ""
+		if es.SampleMass != nil {
+			sampleMass = fmt.Sprintf("%.2f", *es.SampleMass)
+		}
+		
+		evolvedGasVolume := ""
+		if es.EvolvedGasVolume != nil {
+			evolvedGasVolume = fmt.Sprintf("%.2f", *es.EvolvedGasVolume)
+		}
+		
+		massFractionPercentage := ""
+		if es.MassFractionPercentage != nil {
+			massFractionPercentage = fmt.Sprintf("%.2f", *es.MassFractionPercentage)
+		}
+
+		imageURL := ""
+		if sample.ImageURL != nil {
+			imageURL = *sample.ImageURL
+		}
+
+		experimentSampleCards = append(experimentSampleCards, dto.ExperimentSampleCard{
+			SampleID:                   sample.ID,
+			Title:                      sample.Title,
+			Formula:                    sample.Formula,
+			ImageURL:                   imageURL,
+			RelativeMolecularMass:      sample.RelativeMolecularMass,
+			StoichiometricCoefficient:  sample.StoichiometricCoefficient,
+			SampleMass:                 sampleMass,
+			EvolvedGasVolume:           evolvedGasVolume,
+			MassFractionPercentage:     massFractionPercentage,
+		})
+	}
+
+	return dto.ExperimentResponse{
+		Experiment:            experiment,
+		ExperimentSampleCards: experimentSampleCards,
+		CreatorLogin:          creatorLogin,
+		ModeratorLogin:        moderatorLogin,
+	}, nil
 }

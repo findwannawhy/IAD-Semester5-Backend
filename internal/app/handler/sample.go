@@ -191,8 +191,8 @@ func (h *Handler) UpdateSample(ctx *gin.Context) {
 // @Tags soluble-samples
 // @Produce json
 // @Param id path int true "ID образца"
-// @Success 200 {object} dto.AddSampleToExperiment "Исследование с добавленным образцом"
-// @Success 201 {object} dto.AddSampleToExperiment "Создано новое исследование"
+// @Success 200 {object} dto.ExperimentResponse "Исследование с добавленным образцом"
+// @Success 201 {object} dto.ExperimentResponse "Создано новое исследование"
 // @Failure 400 {object} map[string]string "Неверный запрос"
 // @Failure 404 {object} map[string]string "Образец не найден"
 // @Failure 409 {object} map[string]string "Образец уже в исследовании"
@@ -212,14 +212,13 @@ func (h *Handler) AddSampleToExperimentDraft(ctx *gin.Context) {
 	}
 	experimentId := experiment.ID
 
-	sampleId64, err := strconv.ParseUint(ctx.Param("id"), 10, 64)
+	sampleId, err := strconv.Atoi(ctx.Param("id"))
 	if err != nil {
 		h.errorHandler(ctx, http.StatusBadRequest, err)
 		return
 	}
-	sampleId := uint(sampleId64)
 
-	err = h.Repository.AddSampleToExperimentDraft(uint(experimentId), sampleId)
+	err = h.Repository.AddSampleToExperimentDraft(uint(experimentId), uint(sampleId))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			h.errorHandler(ctx, http.StatusNotFound, err)
@@ -238,20 +237,14 @@ func (h *Handler) AddSampleToExperimentDraft(ctx *gin.Context) {
 		status = http.StatusCreated
 	}
 
-	creatorLogin, _,err := h.Repository.GetModeratorAndCreatorLogin(experiment)
+	updatedExperiment, err := h.getExperimentData(experiment.ID)
 	if err != nil {
 		h.errorHandler(ctx, http.StatusInternalServerError, err)
 		return
-	}
+	}	
 
-	ctx.JSON(status, dto.AddSampleToExperiment{
-		SampleID: sampleId,
-		ExperimentId: experiment.ID,
-		ExperimentCreatedAt: experiment.CreatedAt,
-		CreatorLogin: creatorLogin,
-	})
+	ctx.JSON(status, updatedExperiment)
 }
-
 
 // UpdateImage godoc
 // @Summary Загрузить изображение для образца

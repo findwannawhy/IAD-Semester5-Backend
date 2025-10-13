@@ -39,21 +39,21 @@ func (h *Handler) RegisterHandler(router *gin.Engine) {
 
 	unauthorized := api.Group("/")
 
-	unauthorized.POST("/users/sign-up", h.SignUp)	
+	unauthorized.POST("/users/sign-up", h.SignUp)
+	unauthorized.POST("/users/sign-in", h.SignIn)
 	unauthorized.GET("/api/soluble-samples", h.GetSamples) // список образцов
 	unauthorized.GET("/api/soluble-samples/:id", h.GetSample) // получить образец по id
-	unauthorized.POST("/users/sign-in", h.SignIn)
 
 	authorized := api.Group("/")
 	authorized.Use(h.ModeratorMiddleware(false))
 
 	authorized.POST("/api/soluble-samples", h.CreateSample) // создать образец
-	authorized.DELETE("/api/soluble-samples/:id", h.SoftDeleteSample) // удалить образец (soft)
 	authorized.PUT("/api/soluble-samples/:id", h.UpdateSample) // обновить образец
+	authorized.DELETE("/api/soluble-samples/:id", h.SoftDeleteSample) // удалить образец (soft)
 	authorized.POST("/api/soluble-samples/:id/impurity-experiments/draft", h.AddSampleToExperimentDraft) // добавить образец в корзину
 	authorized.POST("/api/soluble-samples/:id/image", h.UpdateImage) // обновить изображение образца
 
-	authorized.GET("/api/impurity-experiments/draft", h.GetExperimentCart)	// текущий черновик пользователя
+	authorized.GET("/api/impurity-experiments/draft", h.GetExperimentDraft)	// текущий черновик пользователя
 	authorized.GET("/api/impurity-experiments", h.GetExperiments) // список экспериментов
 	authorized.GET("/api/impurity-experiments/:id", h.GetExperiment) // получить эксперимент по id
 	authorized.PUT("/api/impurity-experiments/:id", h.UpdateExperiment) // обновить эксперимент
@@ -65,7 +65,7 @@ func (h *Handler) RegisterHandler(router *gin.Engine) {
 
 	authorized.GET("/api/users/me", h.GetProfile) // профиль текущего пользователя
 	authorized.PUT("/api/users/me", h.UpdateProfile) // обновить профиль
-	authorized.POST("/api/users/logout", h.SignOut) // выход из системы
+	authorized.POST("/api/users/sign-out", h.SignOut) // выход из системы
 
 	moderator := api.Group("/")
 	moderator.Use(h.ModeratorMiddleware(true))

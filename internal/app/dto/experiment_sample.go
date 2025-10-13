@@ -1,9 +1,9 @@
 package dto
 
 type DeleteExperimentSampleResp struct {
-	ExperimentID   uint       `json:"experiment_id"`
-	SampleID       uint       `json:"sample_id"`
-	CreatorLogin   string     `json:"creator_login"`
+	Message string `json:"message"`
+	RemovedSampleID int `json:"removed_sample_id"`
+	ExperimentID int `json:"experiment_id"`
 }
 
 type UpdateExperimentSampleReq struct {
