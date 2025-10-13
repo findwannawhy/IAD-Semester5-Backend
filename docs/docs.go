@@ -95,10 +95,10 @@ const docTemplate = `{
                 "tags": [
                     "impurity-experiments"
                 ],
-                "summary": "Получить корзину исследования",
+                "summary": "Получить черновик исследования",
                 "responses": {
                     "200": {
-                        "description": "Данные корзины исследования",
+                        "description": "Данные черновика исследования",
                         "schema": {
                             "$ref": "#/definitions/dto.DraftExperimentResponse"
                         }
@@ -598,7 +598,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Обновленное исследование",
                         "schema": {
-                            "$ref": "#/definitions/dto.DeleteExperimentSampleResp"
+                            "$ref": "#/definitions/dto.ExperimentResponse"
                         }
                     },
                     "400": {
@@ -952,13 +952,13 @@ const docTemplate = `{
                     "200": {
                         "description": "Исследование с добавленным образцом",
                         "schema": {
-                            "$ref": "#/definitions/dto.AddSampleToExperiment"
+                            "$ref": "#/definitions/dto.ExperimentResponse"
                         }
                     },
                     "201": {
                         "description": "Создано новое исследование",
                         "schema": {
-                            "$ref": "#/definitions/dto.AddSampleToExperiment"
+                            "$ref": "#/definitions/dto.ExperimentResponse"
                         }
                     },
                     "400": {
@@ -1490,37 +1490,6 @@ const docTemplate = `{
                 },
                 "password": {
                     "type": "string"
-                }
-            }
-        },
-        "dto.AddSampleToExperiment": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "creator_login": {
-                    "type": "string"
-                },
-                "experiment_id": {
-                    "type": "integer"
-                },
-                "sample_id": {
-                    "type": "integer"
-                }
-            }
-        },
-        "dto.DeleteExperimentSampleResp": {
-            "type": "object",
-            "properties": {
-                "creator_login": {
-                    "type": "string"
-                },
-                "experiment_id": {
-                    "type": "integer"
-                },
-                "sample_id": {
-                    "type": "integer"
                 }
             }
         },

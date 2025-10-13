@@ -69,26 +69,6 @@ definitions:
       password:
         type: string
     type: object
-  dto.AddSampleToExperiment:
-    properties:
-      created_at:
-        type: string
-      creator_login:
-        type: string
-      experiment_id:
-        type: integer
-      sample_id:
-        type: integer
-    type: object
-  dto.DeleteExperimentSampleResp:
-    properties:
-      creator_login:
-        type: string
-      experiment_id:
-        type: integer
-      sample_id:
-        type: integer
-    type: object
   dto.DraftExperimentResponse:
     properties:
       experiment_id:
@@ -504,7 +484,7 @@ paths:
         "200":
           description: Обновленное исследование
           schema:
-            $ref: '#/definitions/dto.DeleteExperimentSampleResp'
+            $ref: '#/definitions/dto.ExperimentResponse'
         "400":
           description: Неверные ID
           schema:
@@ -592,7 +572,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: Данные корзины исследования
+          description: Данные черновика исследования
           schema:
             $ref: '#/definitions/dto.DraftExperimentResponse'
         "400":
@@ -609,7 +589,7 @@ paths:
             type: object
       security:
       - ApiKeyAuth: []
-      summary: Получить корзину исследования
+      summary: Получить черновик исследования
       tags:
       - impurity-experiments
   /soluble-samples:
@@ -811,11 +791,11 @@ paths:
         "200":
           description: Исследование с добавленным образцом
           schema:
-            $ref: '#/definitions/dto.AddSampleToExperiment'
+            $ref: '#/definitions/dto.ExperimentResponse'
         "201":
           description: Создано новое исследование
           schema:
-            $ref: '#/definitions/dto.AddSampleToExperiment'
+            $ref: '#/definitions/dto.ExperimentResponse'
         "400":
           description: Неверный запрос
           schema:
