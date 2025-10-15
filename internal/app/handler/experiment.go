@@ -325,7 +325,7 @@ func (h *Handler) SoftDeleteExperiment(ctx *gin.Context) {
 // @Produce json
 // @Param id path int true "ID исследования"
 // @Param status body dto.StatusJSON true "Новый статус"
-// @Success 200 {object} dto.ModerateExperiment "Результат модерации"
+// @Success 200 {object} dto.ExperimentResponse "Результат модерации"
 // @Failure 400 {object} map[string]string "Неверный запрос"
 // @Failure 403 {object} map[string]string "Доступ запрещен"
 // @Failure 404 {object} map[string]string "Исследование не найдено"
@@ -379,17 +379,19 @@ func (h *Handler) ModerateExperiment(ctx *gin.Context) {
 			return
 	}
 
-	creatorLogin, moderatorLogin, err := h.Repository.GetModeratorAndCreatorLogin(experiment)
+	response, err := h.getExperimentData(experiment.ID)
 	if err != nil {
+		if errors.Is(err, repository.ErrNotFound) {
+			h.errorHandler(ctx, http.StatusNotFound, err)
+		} else if errors.Is(err, repository.ErrNotAllowed) {
+			h.errorHandler(ctx, http.StatusForbidden, err)
+		} else {
 			h.errorHandler(ctx, http.StatusInternalServerError, err)
-			return
+		}
+		return
 	}
 
-	ctx.JSON(http.StatusOK, dto.ModerateExperiment{
-		Experiment: experiment,
-		CreatorLogin: creatorLogin,
-		ModeratorLogin: moderatorLogin,
-	})
+	ctx.JSON(http.StatusOK, response)
 }
 
 func (h *Handler) filterExperimentsByAuth(experiments []ds.ImpurityFractionExperiment, ctx *gin.Context) []ds.ImpurityFractionExperiment {

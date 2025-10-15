@@ -23,13 +23,13 @@ import (
 // @Tags users
 // @Accept json
 // @Produce json
-// @Param user body ds.User true "Параметры нового пользователя"
+// @Param user body dto.UserRequest true "Параметры нового пользователя"
 // @Success 201 {object} dto.UserResponse "Пользователь создан"
 // @Failure 400 {object} map[string]string "Ошибка валидации или входных данных"
 // @Failure 500 {object} map[string]string "Внутренняя ошибка сервера"
 // @Router /users/sign-up [post]
 func (h *Handler) SignUp(ctx *gin.Context) {
-	var userJSON ds.User
+	var userJSON dto.UserRequest
 	if err := ctx.BindJSON(&userJSON); err != nil {
 		h.errorHandler(ctx, http.StatusBadRequest, err)
 		return
@@ -55,14 +55,14 @@ func (h *Handler) SignUp(ctx *gin.Context) {
 // @Tags users
 // @Accept json
 // @Produce json
-// @Param credentials body ds.User true "Логин и пароль"
+// @Param credentials body dto.UserRequest true "Логин и пароль"
 // @Success 200 {object} map[string]string "token"
 // @Failure 400 {object} map[string]string "Неверный запрос"
 // @Failure 404 {object} map[string]string "Пользователь не найден"
 // @Failure 500 {object} map[string]string "Внутренняя ошибка сервера"
 // @Router /users/sign-in [post]
 func (h *Handler) SignIn(ctx *gin.Context) {
-	var userJSON ds.User
+	var userJSON dto.UserRequest
 	if err := ctx.BindJSON(&userJSON); err != nil {
 		h.errorHandler(ctx, http.StatusBadRequest, err)
 		return
@@ -172,7 +172,7 @@ func (h *Handler) UpdateProfile(ctx *gin.Context) {
 		return
 	}
 
-	user, err = h.Repository.UpdateProfile(login, userJSON)
+	updatedUser, err := h.Repository.UpdateProfile(login, userJSON)
 	if err == repository.ErrNotFound {
 		h.errorHandler(ctx, http.StatusNotFound, err)
 		return
@@ -181,11 +181,7 @@ func (h *Handler) UpdateProfile(ctx *gin.Context) {
 		h.errorHandler(ctx, http.StatusInternalServerError, err)
 		return
 	}
-	ctx.JSON(http.StatusOK, dto.UserResponse{
-		ID: user.ID,
-		Login: user.Login,
-		IsModerator: user.IsModerator,
-	})
+	ctx.JSON(http.StatusOK, updatedUser)
 }
 
 // SignOut

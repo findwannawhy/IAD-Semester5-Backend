@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/findwannawhy/IAD-Semester5/internal/app/ds"
+	"github.com/findwannawhy/IAD-Semester5/internal/app/dto"
 	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
@@ -44,37 +45,45 @@ func (r *Repository) GetUserByLogin(login string) (ds.User, error) {
 	return user, nil
 }
 
-func (r *Repository) CreateUser(user ds.User) (ds.User, error) {
+func (r *Repository) CreateUser(user dto.UserRequest) (dto.UserResponse, error) {
 	if user.Login == "" {
-		return ds.User{}, errors.New("login is empty")
+		return dto.UserResponse{}, errors.New("login is empty")
 	}
 	if user.Password == "" {
-		return ds.User{}, errors.New("password is empty")
+		return dto.UserResponse{}, errors.New("password is empty")
 	}
 	if _, err := r.GetUserByLogin(user.Login); err == nil {
-		return ds.User{}, errors.New("user already exists")
+		return dto.UserResponse{}, errors.New("user already exists")
 	}
 
 	hashedPassword, err := HashPassword(user.Password)
 	if err != nil {
-		return ds.User{}, err
+		return dto.UserResponse{}, err
 	}
 	user.Password = hashedPassword
 
-	user.ID = uuid.New()
-
-	sub := r.db.Create(&user)
-	if sub.Error != nil {
-		return ds.User{}, sub.Error
+	userDS := ds.User{
+		ID: uuid.New(),
+		Login: user.Login,
+		Password: hashedPassword,
+		IsModerator: false,
 	}
-	return user, nil
+
+	sub := r.db.Create(&userDS)
+	if sub.Error != nil {
+		return dto.UserResponse{}, sub.Error
+	}
+	return dto.UserResponse{
+		ID: userDS.ID,
+		Login: userDS.Login,
+		IsModerator: userDS.IsModerator,
+	}, nil
 }
 
-
-func (r *Repository) UpdateProfile(login string, userJSON ds.User) (ds.User, error) {
+func (r *Repository) UpdateProfile(login string, userJSON ds.User) (dto.UserResponse, error) {
 	currUser, err := r.GetUserByLogin(login)
 	if err != nil {
-		return ds.User{}, err
+		return dto.UserResponse{}, err
 	}
 
 	if userJSON.Login != "" {
@@ -84,7 +93,7 @@ func (r *Repository) UpdateProfile(login string, userJSON ds.User) (ds.User, err
 	if userJSON.Password != "" {
 		hashedPassword, err := HashPassword(userJSON.Password)
 		if err != nil {
-			return ds.User{}, err
+			return dto.UserResponse{}, err
 		}
 		currUser.Password = hashedPassword
 	}
@@ -96,12 +105,16 @@ func (r *Repository) UpdateProfile(login string, userJSON ds.User) (ds.User, err
 
 	err = r.db.Save(&currUser).Error
 	if err != nil {
-		return ds.User{}, err
+		return dto.UserResponse{}, err
 	}
-	return currUser, nil
+	return dto.UserResponse{
+		ID: currUser.ID,
+		Login: currUser.Login,
+		IsModerator: currUser.IsModerator,
+	}, nil
 }
 
-func (r *Repository) SignIn(userJSON ds.User) (string, error) {
+func (r *Repository) SignIn(userJSON dto.UserRequest) (string, error) {
 	user, err := r.GetUserByLogin(userJSON.Login)
 	if err != nil {
 		return "", err
@@ -118,7 +131,6 @@ func (r *Repository) SignIn(userJSON ds.User) (string, error) {
 
 	return token, nil
 }
-
 
 func GenerateToken(id uuid.UUID, isModerator bool) (string, error) {
 	token := jwt.New(jwt.SigningMethodHS256)

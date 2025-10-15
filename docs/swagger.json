@@ -1,8 +1,20 @@
 {
     "swagger": "2.0",
     "info": {
-        "contact": {}
+        "description": "API для управления экспериментами по определению массовой доли примесей в образце",
+        "title": "IAD API",
+        "contact": {
+            "name": "API Support",
+            "url": "http://localhost:8080",
+            "email": "support@impurity.fraction.com"
+        },
+        "license": {
+            "name": "MIT"
+        },
+        "version": "1.0"
     },
+    "host": "localhost:8080",
+    "basePath": "/api/v1",
     "paths": {
         "/impurity-experiments": {
             "get": {
@@ -432,7 +444,7 @@
                     "200": {
                         "description": "Результат модерации",
                         "schema": {
-                            "$ref": "#/definitions/dto.ModerateExperiment"
+                            "$ref": "#/definitions/dto.ExperimentResponse"
                         }
                     },
                     "400": {
@@ -1081,7 +1093,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/ds.User"
+                            "$ref": "#/definitions/dto.UserRequest"
                         }
                     }
                 ],
@@ -1191,7 +1203,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/ds.User"
+                            "$ref": "#/definitions/dto.UserRequest"
                         }
                     }
                 ],
@@ -1587,20 +1599,6 @@
                 }
             }
         },
-        "dto.ModerateExperiment": {
-            "type": "object",
-            "properties": {
-                "creator_login": {
-                    "type": "string"
-                },
-                "experiment": {
-                    "$ref": "#/definitions/ds.ImpurityFractionExperiment"
-                },
-                "moderator_login": {
-                    "type": "string"
-                }
-            }
-        },
         "dto.SoftDeleteExperiment": {
             "type": "object",
             "properties": {
@@ -1648,6 +1646,17 @@
                 }
             }
         },
+        "dto.UserRequest": {
+            "type": "object",
+            "properties": {
+                "login": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.UserResponse": {
             "type": "object",
             "properties": {
@@ -1661,6 +1670,13 @@
                     "type": "string"
                 }
             }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }

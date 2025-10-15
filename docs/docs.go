@@ -9,7 +9,14 @@ const docTemplate = `{
     "info": {
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
-        "contact": {},
+        "contact": {
+            "name": "API Support",
+            "url": "http://localhost:8080",
+            "email": "support@impurity.fraction.com"
+        },
+        "license": {
+            "name": "MIT"
+        },
         "version": "{{.Version}}"
     },
     "host": "{{.Host}}",
@@ -443,7 +450,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Результат модерации",
                         "schema": {
-                            "$ref": "#/definitions/dto.ModerateExperiment"
+                            "$ref": "#/definitions/dto.ExperimentResponse"
                         }
                     },
                     "400": {
@@ -1092,7 +1099,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/ds.User"
+                            "$ref": "#/definitions/dto.UserRequest"
                         }
                     }
                 ],
@@ -1202,7 +1209,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/ds.User"
+                            "$ref": "#/definitions/dto.UserRequest"
                         }
                     }
                 ],
@@ -1598,20 +1605,6 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.ModerateExperiment": {
-            "type": "object",
-            "properties": {
-                "creator_login": {
-                    "type": "string"
-                },
-                "experiment": {
-                    "$ref": "#/definitions/ds.ImpurityFractionExperiment"
-                },
-                "moderator_login": {
-                    "type": "string"
-                }
-            }
-        },
         "dto.SoftDeleteExperiment": {
             "type": "object",
             "properties": {
@@ -1659,6 +1652,17 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.UserRequest": {
+            "type": "object",
+            "properties": {
+                "login": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
         "dto.UserResponse": {
             "type": "object",
             "properties": {
@@ -1673,17 +1677,24 @@ const docTemplate = `{
                 }
             }
         }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
     }
 }`
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "",
-	Host:             "",
-	BasePath:         "",
+	Version:          "1.0",
+	Host:             "localhost:8080",
+	BasePath:         "/api/v1",
 	Schemes:          []string{},
-	Title:            "",
-	Description:      "",
+	Title:            "IAD API",
+	Description:      "API для управления экспериментами по определению массовой доли примесей в образце",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

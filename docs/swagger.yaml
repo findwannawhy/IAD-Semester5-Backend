@@ -1,3 +1,4 @@
+basePath: /api/v1
 definitions:
   ds.AcidSolubleSample:
     properties:
@@ -138,15 +139,6 @@ definitions:
       experiment:
         $ref: '#/definitions/ds.ImpurityFractionExperiment'
     type: object
-  dto.ModerateExperiment:
-    properties:
-      creator_login:
-        type: string
-      experiment:
-        $ref: '#/definitions/ds.ImpurityFractionExperiment'
-      moderator_login:
-        type: string
-    type: object
   dto.SoftDeleteExperiment:
     properties:
       creator_login:
@@ -177,6 +169,13 @@ definitions:
       sample_mass:
         type: number
     type: object
+  dto.UserRequest:
+    properties:
+      login:
+        type: string
+      password:
+        type: string
+    type: object
   dto.UserResponse:
     properties:
       id:
@@ -186,8 +185,18 @@ definitions:
       login:
         type: string
     type: object
+host: localhost:8080
 info:
-  contact: {}
+  contact:
+    email: support@impurity.fraction.com
+    name: API Support
+    url: http://localhost:8080
+  description: API для управления экспериментами по определению массовой доли примесей
+    в образце
+  license:
+    name: MIT
+  title: IAD API
+  version: "1.0"
 paths:
   /impurity-experiments:
     get:
@@ -434,7 +443,7 @@ paths:
         "200":
           description: Результат модерации
           schema:
-            $ref: '#/definitions/dto.ModerateExperiment'
+            $ref: '#/definitions/dto.ExperimentResponse'
         "400":
           description: Неверный запрос
           schema:
@@ -981,7 +990,7 @@ paths:
         name: credentials
         required: true
         schema:
-          $ref: '#/definitions/ds.User'
+          $ref: '#/definitions/dto.UserRequest'
       produces:
       - application/json
       responses:
@@ -1053,7 +1062,7 @@ paths:
         name: user
         required: true
         schema:
-          $ref: '#/definitions/ds.User'
+          $ref: '#/definitions/dto.UserRequest'
       produces:
       - application/json
       responses:
@@ -1076,4 +1085,9 @@ paths:
       summary: Регистрация пользователя
       tags:
       - users
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

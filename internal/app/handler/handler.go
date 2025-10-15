@@ -47,18 +47,14 @@ func (h *Handler) RegisterHandler(router *gin.Engine) {
 	authorized := api.Group("/")
 	authorized.Use(h.ModeratorMiddleware(false))
 
-	authorized.POST("/soluble-samples", h.CreateSample) // создать образец
-	authorized.PUT("/soluble-samples/:id", h.UpdateSample) // обновить образец
-	authorized.DELETE("/soluble-samples/:id", h.SoftDeleteSample) // удалить образец (soft)
 	authorized.POST("/soluble-samples/:id/impurity-experiments/draft", h.AddSampleToExperimentDraft) // добавить образец в корзину
-	authorized.POST("/soluble-samples/:id/image", h.UpdateImage) // обновить изображение образца
 
 	authorized.GET("/impurity-experiments/draft", h.GetExperimentDraft)	// текущий черновик пользователя
 	authorized.GET("/impurity-experiments", h.GetExperiments) // список экспериментов
 	authorized.GET("/impurity-experiments/:id", h.GetExperiment) // получить эксперимент по id
 	authorized.PUT("/impurity-experiments/:id", h.UpdateExperiment) // обновить эксперимент
-	authorized.PUT("/impurity-experiments/:id/formation", h.FormExperiment) // поменять статус эксперимента (user)
-	authorized.DELETE("/impurity-experiments/:id", h.SoftDeleteExperiment) // удалить эксперимент (soft)
+	authorized.PUT("/impurity-experiments/:id/formation", h.FormExperiment) // сформировать эксперимент (user)
+	authorized.DELETE("/impurity-experiments/:id", h.SoftDeleteExperiment) // мягкое удаление эксперимента (user)
 
 	authorized.DELETE("/impurity-experiments/:id/soluble-samples/:sample_id", h.DeleteSampleFromExperiment) // удалить образец из эксперимента
 	authorized.PUT("/impurity-experiments/:id/soluble-samples/:sample_id", h.UpdateExperimentSample) // обновить позицию образца в эксперименте
@@ -69,6 +65,12 @@ func (h *Handler) RegisterHandler(router *gin.Engine) {
 
 	moderator := api.Group("/")
 	moderator.Use(h.ModeratorMiddleware(true))
+	
+	moderator.POST("/soluble-samples", h.CreateSample) // создать образец
+	moderator.PUT("/soluble-samples/:id", h.UpdateSample) // обновить образец
+	moderator.DELETE("/soluble-samples/:id", h.SoftDeleteSample) // удалить образец (soft)
+	moderator.POST("/soluble-samples/:id/image", h.UpdateImage) // обновить изображение образца
+
 	moderator.PUT("/impurity-experiments/:id/moderation", h.ModerateExperiment) // поменять статус эксперимента (moderator)
 
 	swaggerURL := ginSwagger.URL("/swagger/doc.json")
