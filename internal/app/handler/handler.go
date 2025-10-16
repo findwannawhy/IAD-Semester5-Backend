@@ -59,8 +59,8 @@ func (h *Handler) RegisterHandler(router *gin.Engine) {
 	authorized.DELETE("/impurity-experiments/:id/soluble-samples/:sample_id", h.DeleteSampleFromExperiment) // удалить образец из эксперимента
 	authorized.PUT("/impurity-experiments/:id/soluble-samples/:sample_id", h.UpdateExperimentSample) // обновить позицию образца в эксперименте
 
-	authorized.GET("/users/:login/profile", h.GetProfile) // профиль текущего пользователя
-	authorized.PUT("/users/:login/profile", h.UpdateProfile) // обновить профиль
+	authorized.GET("/users/me", h.GetProfile) // профиль текущего пользователя
+	authorized.PUT("/users/me", h.UpdateProfile) // обновить профиль
 	authorized.POST("/users/sign-out", h.SignOut) // выход из системы
 
 	moderator := api.Group("/")

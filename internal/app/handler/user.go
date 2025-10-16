@@ -94,7 +94,7 @@ func (h *Handler) SignIn(ctx *gin.Context) {
 // @Failure 404 {object} map[string]string "Пользователь не найден"
 // @Failure 500 {object} map[string]string "Внутренняя ошибка сервера"
 // @Security ApiKeyAuth
-// @Router /users/{login}/profile [get]
+// @Router /users/me [get]
 func (h *Handler) GetProfile(ctx *gin.Context) {
 	userID, err := getUserID(ctx)
 	if err != nil {
@@ -102,9 +102,8 @@ func (h *Handler) GetProfile(ctx *gin.Context) {
 		return
 	}
 
-	login := ctx.Param("login")
-
-	user, err := h.Repository.GetUserByLogin(login)
+	user, err := h.Repository.GetUserByID(userID)
+	
 	if err == repository.ErrNotFound {
 		h.errorHandler(ctx, http.StatusNotFound, err)
 		return
@@ -142,7 +141,7 @@ func (h *Handler) GetProfile(ctx *gin.Context) {
 // @Failure 404 {object} map[string]string "Пользователь не найден"
 // @Failure 500 {object} map[string]string "Внутренняя ошибка сервера"
 // @Security ApiKeyAuth
-// @Router /users/{login}/profile [put]
+// @Router /users/me [put]
 func (h *Handler) UpdateProfile(ctx *gin.Context) {
 	userID, err := getUserID(ctx)
 	if err != nil {
@@ -150,15 +149,13 @@ func (h *Handler) UpdateProfile(ctx *gin.Context) {
 		return
 	}
 
-	login := ctx.Param("login")
-
 	var userJSON ds.User
 	if err := ctx.BindJSON(&userJSON); err != nil {
 		h.errorHandler(ctx, http.StatusBadRequest, err)
 		return
 	}
 
-	user, err := h.Repository.GetUserByLogin(login)
+	user, err := h.Repository.GetUserByID(userID)
 	if err == repository.ErrNotFound {
 		h.errorHandler(ctx, http.StatusNotFound, err)
 		return
@@ -172,7 +169,7 @@ func (h *Handler) UpdateProfile(ctx *gin.Context) {
 		return
 	}
 
-	updatedUser, err := h.Repository.UpdateProfile(login, userJSON)
+	updatedUser, err := h.Repository.UpdateProfile(user.Login, userJSON)
 	if err == repository.ErrNotFound {
 		h.errorHandler(ctx, http.StatusNotFound, err)
 		return
