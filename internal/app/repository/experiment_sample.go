@@ -42,3 +42,33 @@ func (r *Repository) UpdateExperimentSample(experimentId uint, sampleId uint, ex
 	return expSample, nil
 }
 
+func (r *Repository) AddSampleToExperiment(experimentId uint, sampleId uint) error {
+	var sample ds.AcidSolubleSample
+	if err := r.db.First(&sample, sampleId).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return fmt.Errorf("%w: образец с id %d", ErrNotFound, sampleId)
+		}
+		return err
+	}
+
+	var experiment ds.ImpurityFractionExperiment
+	if err := r.db.First(&experiment, experimentId).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return fmt.Errorf("%w: эксперимент с id %d", ErrNotFound, experimentId)
+		}
+		return err
+	}
+	
+	experimentSample := ds.ExperimentSample{}
+	result := r.db.Where("sample_id = ? and experiment_id = ?", sampleId, experimentId).Find(&experimentSample)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected != 0 {
+		return fmt.Errorf("%w: образец %d уже в эксперименте %d", ErrAlreadyExists, sampleId, experimentId)
+	}
+	return r.db.Create(&ds.ExperimentSample{
+		SampleID:     uint(sampleId),
+		ExperimentID: uint(experimentId),
+	}).Error
+}

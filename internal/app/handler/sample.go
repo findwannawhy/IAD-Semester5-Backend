@@ -218,7 +218,7 @@ func (h *Handler) AddSampleToExperimentDraft(ctx *gin.Context) {
 		return
 	}
 
-	err = h.Repository.AddSampleToExperimentDraft(uint(experimentId), uint(sampleId))
+	err = h.Repository.AddSampleToExperiment(uint(experimentId), uint(sampleId))
 	if err != nil {
 		if errors.Is(err, repository.ErrNotFound) {
 			h.errorHandler(ctx, http.StatusNotFound, err)

@@ -132,6 +132,27 @@ func (r *Repository) SignIn(userJSON dto.UserRequest) (string, error) {
 	return token, nil
 }
 
+func (r *Repository) GetModeratorAndCreatorLogin(experiment ds.ImpurityFractionExperiment) (string, string, error) {
+	var creator ds.User
+	var moderator ds.User
+
+	err := r.db.Where("id = ?", experiment.CreatorID).First(&creator).Error
+	if err != nil {
+		return "", "", err
+	}
+
+	var moderatorLogin string
+	if experiment.ModeratorID != nil {
+		err = r.db.Where("id = ?", *experiment.ModeratorID).First(&moderator).Error
+		if err != nil {
+			return "", "", err
+		}
+		moderatorLogin = moderator.Login
+	}
+	
+	return creator.Login, moderatorLogin, nil
+}
+
 func GenerateToken(id uuid.UUID, isModerator bool) (string, error) {
 	token := jwt.New(jwt.SigningMethodHS256)
 

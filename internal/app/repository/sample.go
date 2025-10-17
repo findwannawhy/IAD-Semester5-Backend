@@ -107,58 +107,6 @@ func (r *Repository) SoftDeleteSample(id uint) error {
 	return nil
 }
 
-func (r *Repository) AddSampleToExperimentDraft(experimentId uint, sampleId uint) error {
-	var sample ds.AcidSolubleSample
-	if err := r.db.First(&sample, sampleId).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return fmt.Errorf("%w: образец с id %d", ErrNotFound, sampleId)
-		}
-		return err
-	}
-
-	var experiment ds.ImpurityFractionExperiment
-	if err := r.db.First(&experiment, experimentId).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return fmt.Errorf("%w: эксперимент с id %d", ErrNotFound, experimentId)
-		}
-		return err
-	}
-	
-	experimentSample := ds.ExperimentSample{}
-	result := r.db.Where("sample_id = ? and experiment_id = ?", sampleId, experimentId).Find(&experimentSample)
-	if result.Error != nil {
-		return result.Error
-	}
-	if result.RowsAffected != 0 {
-		return fmt.Errorf("%w: образец %d уже в эксперименте %d", ErrAlreadyExists, sampleId, experimentId)
-	}
-	return r.db.Create(&ds.ExperimentSample{
-		SampleID:     uint(sampleId),
-		ExperimentID: uint(experimentId),
-	}).Error
-}
-
-func (r *Repository) GetModeratorAndCreatorLogin(experiment ds.ImpurityFractionExperiment) (string, string, error) {
-	var creator ds.User
-	var moderator ds.User
-
-	err := r.db.Where("id = ?", experiment.CreatorID).First(&creator).Error
-	if err != nil {
-		return "", "", err
-	}
-
-	var moderatorLogin string
-	if experiment.ModeratorID != nil {
-		err = r.db.Where("id = ?", *experiment.ModeratorID).First(&moderator).Error
-		if err != nil {
-			return "", "", err
-		}
-		moderatorLogin = moderator.Login
-	}
-	
-	return creator.Login, moderatorLogin, nil
-}
-
 func (r *Repository) UpdateImage(ctx *gin.Context, sampleId uint, file *multipart.FileHeader) (ds.AcidSolubleSample, error) {
 	sample_, err := r.GetSample(sampleId)
 	if err != nil {
