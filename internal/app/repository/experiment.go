@@ -100,22 +100,23 @@ func (r *Repository) GetExperimentDraft(creatorID uuid.UUID) (ds.ImpurityFractio
 	return experiment, true, nil
 }
 
-func (r *Repository) GetExperimentCount(creatorID uuid.UUID) int64 {
+func (r *Repository) GetExperimentCount(creatorID uuid.UUID) (int64, error) {
 	if creatorID == uuid.Nil {
-			return 0
+			return -1, errors.New("creatorID is nil")
 	}
 		
 	var count int64
 	experiment, err := r.CheckCurrentExperimentDraft(creatorID)
 	if err != nil {
-		return 0
+		return -1, err
 	}
 	err = r.db.Model(&ds.ExperimentSample{}).Where("experiment_id = ?", experiment.ID).Count(&count).Error
 	if err != nil {
 		logrus.Println("Error counting records in experiments_samples:", err)
+		return -1, err
 	}
 
-	return count
+	return count, nil
 }
 
 func (r *Repository) GetSingleExperiment(id uint) (ds.ImpurityFractionExperiment, error) {

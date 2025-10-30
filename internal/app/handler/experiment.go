@@ -101,37 +101,34 @@ func (h *Handler) GetExperiments(ctx *gin.Context) {
 func (h *Handler) GetExperimentDraft(ctx *gin.Context) {
 	userID, err := getUserID(ctx)
 	if err != nil {
-		h.errorHandler(ctx, http.StatusBadRequest, err)
-		return
-	}
-	samplesCount := h.Repository.GetExperimentCount(userID)
-
-	if samplesCount == 0 {
 		ctx.JSON(http.StatusOK, dto.DraftExperimentResponse{
 			ExperimentID: 0,
-			SampleCount:  0,
+			SampleCount:  -1,
+		})
+		return
+	}
+
+	samplesCount, err := h.Repository.GetExperimentCount(userID)
+	if err != nil || samplesCount == -1 {
+		ctx.JSON(http.StatusOK, dto.DraftExperimentResponse{
+			ExperimentID: 0,
+			SampleCount:  -1,
 		})
 		return
 	}
 
 	experiment, err := h.Repository.CheckCurrentExperimentDraft(userID)
 	if err != nil {
-		if errors.Is(err, repository.ErrNotAllowed) {
-			h.errorHandler(ctx, http.StatusUnauthorized, err)
-		} else if errors.Is(err, repository.ErrNoDraft) {
-			ctx.JSON(http.StatusOK, dto.DraftExperimentResponse{
-				ExperimentID: 0,
-				SampleCount:  0,
-			})
-		} else {
-			h.errorHandler(ctx, http.StatusInternalServerError, err)
-		}
+		ctx.JSON(http.StatusOK, dto.DraftExperimentResponse{
+			ExperimentID: 0,
+			SampleCount:  -1,
+		})
 		return
 	}
 
 	ctx.JSON(http.StatusOK, dto.DraftExperimentResponse{
 		ExperimentID: experiment.ID,
-		SampleCount:  h.Repository.GetExperimentCount(experiment.CreatorID),
+		SampleCount: samplesCount,
 	})
 }
 

@@ -21,19 +21,6 @@ func NewHandler(r *repository.Repository) *Handler {
 	}
 }
 
-// RegisterHandler godoc
-// @title IAD API
-// @version 1.0
-// @description API для управления экспериментами по определению массовой доли примесей в образце
-// @contact.name API Support
-// @contact.url http://localhost:8080
-// @contact.email support@impurity.fraction.com
-// @license.name MIT
-// @host localhost:8080
-// @BasePath /api/v1
-// @securityDefinitions.apikey BearerAuth
-// @in header
-// @name Authorization
 func (h *Handler) RegisterHandler(router *gin.Engine) {
 	api := router.Group("/api/v1")
 
@@ -44,12 +31,15 @@ func (h *Handler) RegisterHandler(router *gin.Engine) {
 	unauthorized.GET("/soluble-samples", h.GetSamples) // список образцов
 	unauthorized.GET("/soluble-samples/:id", h.GetSample) // получить образец по id
 
+	optionalauthorized := api.Group("/")
+	optionalauthorized.Use(h.WithOptionalAuthCheck())
+	optionalauthorized.GET("/impurity-experiments/draft", h.GetExperimentDraft)	// текущий черновик пользователя
+
 	authorized := api.Group("/")
 	authorized.Use(h.ModeratorMiddleware(false))
 
 	authorized.POST("/soluble-samples/:id/impurity-experiments/draft", h.AddSampleToExperimentDraft) // добавить образец в корзину
 
-	authorized.GET("/impurity-experiments/draft", h.GetExperimentDraft)	// текущий черновик пользователя
 	authorized.GET("/impurity-experiments", h.GetExperiments) // список экспериментов
 	authorized.GET("/impurity-experiments/:id", h.GetExperiment) // получить эксперимент по id
 	authorized.PUT("/impurity-experiments/:id", h.UpdateExperiment) // обновить эксперимент

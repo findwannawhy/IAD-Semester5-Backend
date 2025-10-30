@@ -1,3 +1,12 @@
+// RegisterHandler godoc
+// @title IAD-Semester5 API
+// @version 1.0
+// @description API для управления экспериментами по определению массовой доли примесей в образце
+// @host localhost:8080
+// @BasePath /api/v1
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name Authorization
 package main
 
 import (
