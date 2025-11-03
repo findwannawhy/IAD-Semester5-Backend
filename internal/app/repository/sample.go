@@ -47,6 +47,34 @@ func (r *Repository) GetSamplesByName(name string) ([]ds.AcidSolubleSample, erro
 	return samples, nil
 }
 
+// GetSamplesByIDs возвращает образцы по списку ID в нужном порядке
+func (r *Repository) GetSamplesByIDs(ids []uint) ([]ds.AcidSolubleSample, error) {
+	if len(ids) == 0 {
+		return []ds.AcidSolubleSample{}, nil
+	}
+	
+	var samples []ds.AcidSolubleSample
+	err := r.db.Where("id IN ? AND deleted = ?", ids, false).Find(&samples).Error
+	if err != nil {
+		return nil, err
+	}
+	
+	// Сортируем образцы в соответствии с порядком ID
+	sampleMap := make(map[uint]ds.AcidSolubleSample)
+	for _, sample := range samples {
+		sampleMap[sample.ID] = sample
+	}
+	
+	orderedSamples := make([]ds.AcidSolubleSample, 0, len(ids))
+	for _, id := range ids {
+		if sample, ok := sampleMap[id]; ok {
+			orderedSamples = append(orderedSamples, sample)
+		}
+	}
+	
+	return orderedSamples, nil
+}
+
 func (r *Repository) CreateSample(sample ds.AcidSolubleSample) (ds.AcidSolubleSample, error) {
 	if sample.RelativeMolecularMass <= 0 {
 		return ds.AcidSolubleSample{}, errors.New("некорректная относительная молекулярная масса")

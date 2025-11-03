@@ -6,12 +6,16 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
+	"github.com/google/uuid"
 )
 
 const prefix = "Bearer"
+const guestSessionCookie = "guest_session_id"
+const guestSessionTTL = 20 * time.Minute
 
 func (h *Handler) ModeratorMiddleware(allowedRole bool) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -150,4 +154,53 @@ func extractTokenFromHeader(r *http.Request) string {
 	}
 
 	return strings.Split(bearerToken, " ")[1]
+}
+
+// GuestSessionMiddleware создает или обновляет гостевую сессию
+func (h *Handler) GuestSessionMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		sessionID, err := c.Cookie(guestSessionCookie)
+		
+		needNewSession := false
+		if err != nil || sessionID == "" {
+			needNewSession = true
+		} else {
+			// Проверяем существование и время создания сессии в Redis
+			createdAt, err := h.Repository.GetGuestSessionCreatedAt(context.Background(), sessionID)
+			if err != nil || createdAt.IsZero() {
+				needNewSession = true
+			} else {
+				// Проверяем, не истек ли срок действия сессии
+				if time.Since(createdAt) > guestSessionTTL {
+					// Удаляем старую сессию
+					h.Repository.DeleteGuestSession(context.Background(), sessionID)
+					needNewSession = true
+				}
+			}
+		}
+		
+		if needNewSession {
+			// Создаем новую сессию
+			sessionID = uuid.New().String()
+			err := h.Repository.CreateGuestSession(context.Background(), sessionID, guestSessionTTL)
+			if err != nil {
+				c.Next()
+				return
+			}
+			
+			// Устанавливаем cookie
+			c.SetCookie(
+				guestSessionCookie,
+				sessionID,
+				int(guestSessionTTL.Seconds()),
+				"/",
+				"",
+				false,
+				true,
+			)
+		}
+		
+		c.Set("guest_session_id", sessionID)
+		c.Next()
+	}
 }

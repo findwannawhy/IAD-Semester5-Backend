@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/findwannawhy/IAD-Semester5/internal/app/ds"
 	"github.com/findwannawhy/IAD-Semester5/internal/app/dto"
@@ -74,6 +75,14 @@ func (h *Handler) GetSample(ctx *gin.Context) {
 			h.errorHandler(ctx, http.StatusInternalServerError, err)
 		}
 		return
+	}
+
+	// Записываем просмотр образца в гостевую сессию
+	if sessionID, exists := ctx.Get("guest_session_id"); exists {
+		if sessionIDStr, ok := sessionID.(string); ok {
+			// Добавляем просмотренный образец, игнорируя ошибки
+			_ = h.Repository.AddViewedSample(ctx.Request.Context(), sessionIDStr, id, 20*time.Minute)
+		}
 	}
 
 	ctx.JSON(http.StatusOK, sample)
@@ -289,5 +298,49 @@ func (h *Handler) UpdateImage(ctx *gin.Context) {
 		SampleTitle: sample.Title,
 		ImageURL: *sample.ImageURL,
 	})
+}
+
+// GetRecentlyViewedSamples godoc
+// @Summary Получить недавно просмотренные образцы
+// @Description Возвращает список недавно просмотренных образцов для текущей гостевой сессии
+// @Tags soluble-samples
+// @Produce json
+// @Success 200 {array} ds.AcidSolubleSample "Список недавно просмотренных образцов"
+// @Failure 500 {object} map[string]string "Внутренняя ошибка сервера"
+// @Router /soluble-samples/recently-viewed/list [get]
+func (h *Handler) GetRecentlyViewedSamples(ctx *gin.Context) {
+	// Получаем ID гостевой сессии
+	sessionID, exists := ctx.Get("guest_session_id")
+	if !exists {
+		ctx.JSON(http.StatusOK, []ds.AcidSolubleSample{})
+		return
+	}
+
+	sessionIDStr, ok := sessionID.(string)
+	if !ok {
+		ctx.JSON(http.StatusOK, []ds.AcidSolubleSample{})
+		return
+	}
+
+	// Получаем список ID просмотренных образцов
+	viewedIDs, err := h.Repository.GetViewedSamples(ctx.Request.Context(), sessionIDStr)
+	if err != nil {
+		ctx.JSON(http.StatusOK, []ds.AcidSolubleSample{})
+		return
+	}
+
+	if len(viewedIDs) == 0 {
+		ctx.JSON(http.StatusOK, []ds.AcidSolubleSample{})
+		return
+	}
+
+	// Получаем полные данные образцов
+	samples, err := h.Repository.GetSamplesByIDs(viewedIDs)
+	if err != nil {
+		h.errorHandler(ctx, http.StatusInternalServerError, err)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, samples)
 }
 
