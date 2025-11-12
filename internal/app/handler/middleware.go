@@ -175,6 +175,9 @@ func (h *Handler) GuestSessionMiddleware() gin.HandlerFunc {
 					// Удаляем старую сессию
 					h.Repository.DeleteGuestSession(context.Background(), sessionID)
 					needNewSession = true
+				} else {
+					// Продлеваем существующую сессию
+					_ = h.Repository.CreateGuestSession(context.Background(), sessionID, guestSessionTTL)
 				}
 			}
 		}
@@ -188,15 +191,16 @@ func (h *Handler) GuestSessionMiddleware() gin.HandlerFunc {
 				return
 			}
 			
-			// Устанавливаем cookie
+			// Устанавливаем cookie с SameSite=Lax для локальной разработки
+			c.SetSameSite(http.SameSiteLaxMode)
 			c.SetCookie(
 				guestSessionCookie,
 				sessionID,
 				int(guestSessionTTL.Seconds()),
 				"/",
 				"",
-				false,
-				true,
+				false,  // secure - false для локальной разработки через HTTP
+				true,   // httpOnly
 			)
 		}
 		
