@@ -1,8 +1,11 @@
 package repository
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/findwannawhy/IAD-Semester5/internal/app/ds"
@@ -235,28 +238,24 @@ func (r *Repository) ModerateExperiment(id uint, status string, currUserId uuid.
 	} else if experiment.Status != "formed" {
 		return ds.ImpurityFractionExperiment{}, errors.New("this experiment can not be " + status)
 	}
-
+	// Если исследование одобрено - запускаем асинхронный расчет массовой доли примесей для КАЖДОГО образца
 	if status == "finished" {
 		experimentSamples, err := r.GetExperimentSamples(experiment.ID)
 		if err != nil {
 			return ds.ImpurityFractionExperiment{}, err
 		}
+		// Для каждого образца запускаем асинхронный расчет
 		for _, experimentSample := range experimentSamples {
 			sample, err := r.GetSample(experimentSample.SampleID)
 			if err != nil {
-				return ds.ImpurityFractionExperiment{}, err
+				logrus.Errorf("Error getting sample %d: %v", experimentSample.SampleID, err)
+				continue
 			}
-			massFractionPercentage, err := CalculateMassFraction(*experiment.MolarVolume, sample.RelativeMolecularMass, sample.StoichiometricCoefficient, *experimentSample.SampleMass, *experimentSample.EvolvedGasVolume)
-			if err != nil {
-				return ds.ImpurityFractionExperiment{}, err
-			}
-			err = r.db.Model(&experimentSample).Where("experiment_id = ? AND sample_id = ?", experiment.ID, experimentSample.SampleID).Updates(ds.ExperimentSample{
-				MassFractionPercentage: &massFractionPercentage,
-			}).Error
-			if err != nil {
-				return ds.ImpurityFractionExperiment{}, err
-			}
+			// Запускаем асинхронный расчет массовой доли примесей
+			go r.calculateSingleMassFractionAsync(experiment.ID, sample, experimentSample)
 		}
+
+		logrus.Infof("Started async mass fraction calculations for experiment %d, samples: %d", experiment.ID, len(experimentSamples))
 	}
 
 	now := time.Now()
@@ -270,4 +269,84 @@ func (r *Repository) ModerateExperiment(id uint, status string, currUserId uuid.
 	}
 
 	return experiment, nil
+}
+
+func (r *Repository) calculateSingleMassFractionAsync(experimentId uint, sample *ds.AcidSolubleSample, experimentSample ds.ExperimentSample) {
+    // URL Django сервиса для расчета массовой доли примесей
+    asyncServiceURL := "http://localhost:8000/api/calculate-mass-fraction/"
+    
+    // Получаем эксперимент для доступа к molar_volume
+    experiment, err := r.GetSingleExperiment(experimentId)
+    if err != nil {
+        logrus.Errorf("Error getting experiment %d: %v", experimentId, err)
+        return
+    }
+    
+    // Проверяем наличие необходимых данных
+    if experiment.MolarVolume == nil {
+        logrus.Errorf("Molar volume is nil for experiment %d", experimentId)
+        return
+    }
+    
+    // Данные для расчета массовой доли примесей
+    requestData := map[string]interface{}{
+        "experiment_id":              experimentId,
+        "sample_id":                  sample.ID,
+        "molar_volume":               *experiment.MolarVolume,
+        "relative_molecular_mass":    sample.RelativeMolecularMass,
+        "stoichiometric_coefficient": sample.StoichiometricCoefficient,
+        "sample_mass":                experimentSample.SampleMass,
+        "evolved_gas_volume":         experimentSample.EvolvedGasVolume,
+    }
+
+    jsonData, err := json.Marshal(requestData)
+    if err != nil {
+        logrus.Errorf("Error marshaling request data for sample %d: %v", sample.ID, err)
+        return
+    }
+
+    // Отправляем запрос в асинхронный сервис
+    resp, err := http.Post(asyncServiceURL, "application/json", bytes.NewBuffer(jsonData))
+    if err != nil {
+        logrus.Errorf("Error sending request to async service for sample %d: %v", sample.ID, err)
+        return
+    }
+    defer resp.Body.Close()
+
+    if resp.StatusCode != 202 {
+        logrus.Errorf("Async service returned status %d for sample %d", resp.StatusCode, sample.ID)
+        return
+    }
+
+    logrus.Infof("Successfully started async calculation for experiment %d, sample %d", experimentId, sample.ID)
+}
+
+func (r *Repository) UpdateMassFraction(experimentId uint, sampleId uint, massFraction float64) error {
+    var experimentSample ds.ExperimentSample
+    err := r.db.Where("experiment_id = ? AND sample_id = ?", experimentId, sampleId).First(&experimentSample).Error
+    if err != nil {
+        if errors.Is(err, gorm.ErrRecordNotFound) {
+            return fmt.Errorf("%w: связь образца с экспериментом не найдена", ErrNotFound)
+        }
+        return err
+    }
+
+    err = r.db.Model(&experimentSample).Update("mass_fraction_percentage", massFraction).Error
+    if err != nil {
+        return err
+    }
+
+    logrus.Printf("Updated mass fraction: experiment=%d, sample=%d, mass_fraction=%.2f", experimentId, sampleId, massFraction)
+    return nil
+}
+
+func (r *Repository) GetCalculatedSamplesCount(experimentId uint) (int, error) {
+    var count int64
+    err := r.db.Model(&ds.ExperimentSample{}).
+        Where("experiment_id = ? AND mass_fraction_percentage IS NOT NULL", experimentId).
+        Count(&count).Error
+    if err != nil {
+        return 0, err
+    }
+    return int(count), nil
 }

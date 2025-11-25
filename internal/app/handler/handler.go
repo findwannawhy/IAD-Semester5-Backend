@@ -33,6 +33,9 @@ func (h *Handler) RegisterHandler(router *gin.Engine) {
 	unauthorized.GET("/soluble-samples/recently-viewed/list", h.GetRecentlyViewedSamples) // недавно просмотренные образцы (должен быть ДО :id)
 	unauthorized.GET("/soluble-samples/:id", h.GetSample) // получить образец по id
 
+	// Проверка просто по заголовку внутри метода без использования middleware
+	unauthorized.PUT("/impurity-experiments/:id/mass-fraction", h.UpdateMassFraction)
+
 	optionalauthorized := api.Group("/")
 	optionalauthorized.Use(h.WithOptionalAuthCheck())
 	optionalauthorized.GET("/impurity-experiments/draft", h.GetExperimentDraft)	// текущий черновик пользователя

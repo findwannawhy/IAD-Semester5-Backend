@@ -61,31 +61,42 @@ func (h *Handler) GetExperiments(ctx *gin.Context) {
 
 	experiments = h.filterExperimentsByAuth(experiments, ctx)
 
-	resp := make([]dto.ExperimentsResponse, 0, len(experiments))
+	// Создаем расширенный ответ с информацией о расчетах
+	type ResearchWithStats struct {
+			dto.ExperimentResponse
+			TotalSamples    int `json:"total_samples"`
+			CalculatedSamples int `json:"calculated_samples"`
+	}
+
+	resp := make([]ResearchWithStats, 0, len(experiments))
 	for _, experiment := range experiments {
 		creatorLogin, moderatorLogin, err := h.Repository.GetModeratorAndCreatorLogin(experiment)
 		if err != nil {
 			h.errorHandler(ctx, http.StatusInternalServerError, err)
 			return
 		}
-		
-		molarVolume := 0.0
-		if experiment.MolarVolume != nil {
-			molarVolume = *experiment.MolarVolume
+
+		experimentSamples, _ := h.Repository.GetExperimentSamples(experiment.ID)
+		// Получаем общее количество образцов в исследовании
+		totalSamples := len(experimentSamples)
+		// Получаем количество посчитанных образцов
+		calculatedSamples, _ := h.Repository.GetCalculatedSamplesCount(experiment.ID)
+
+		researchWithStats := ResearchWithStats{
+			ExperimentResponse: dto.ExperimentResponse{
+				Experiment:            experiment,
+				ExperimentSampleCards: []dto.ExperimentSampleCard{},
+				CreatorLogin:          creatorLogin,
+				ModeratorLogin:        moderatorLogin,
+			},
+			TotalSamples:      totalSamples,
+			CalculatedSamples: calculatedSamples,
 		}
-		
-		resp = append(resp, dto.ExperimentsResponse{
-			ID:             experiment.ID,
-			MolarVolume:    molarVolume,
-			Status:         experiment.Status,
-			CreatedAt:      experiment.CreatedAt,
-			FormedAt:       experiment.FormedAt,
-			FinishedAt:     experiment.FinishedAt,
-			CreatorLogin:   creatorLogin,
-			ModeratorLogin: moderatorLogin,
-		})
-	}
-	ctx.JSON(http.StatusOK, resp)
+
+		resp = append(resp, researchWithStats)
+    }
+    
+    ctx.JSON(http.StatusOK, resp)
 }
 
 // GetExperimentDraft godoc
@@ -391,51 +402,129 @@ func (h *Handler) ModerateExperiment(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, response)
 }
 
+
+// UpdateMassFraction godoc
+// @Summary Обновить массовую долю примесей (для асинхронного сервиса)
+// @Description Принимает результаты расчета массовой доли примесей от асинхронного сервиса
+// @Tags experiments
+// @Accept json
+// @Produce json
+// @Param id path int true "ID эксперимента"
+// @Param data body map[string]interface{} true "Данные массовой доли"
+// @Success 200 {object} map[string]string "Массовая доля обновлена"
+// @Failure 400 {object} map[string]string "Неверные данные"
+// @Failure 403 {object} map[string]string "Доступ запрещен (неверный токен)"
+// @Failure 404 {object} map[string]string "Эксперимент не найден"
+// @Router /experiment/{id}/mass-fraction [put]
+func (h *Handler) UpdateMassFraction(ctx *gin.Context) {
+    // Проверка авторизации через токен
+    authHeader := ctx.GetHeader("Authorization")
+    if authHeader != "secret123" {
+        ctx.JSON(http.StatusForbidden, gin.H{
+            "status": "error",
+            "description": "доступ запрещен",
+        })
+        return
+    }
+
+    idStr := ctx.Param("id")
+    experimentId, err := strconv.Atoi(idStr)
+    if err != nil {
+        ctx.JSON(http.StatusBadRequest, gin.H{
+            "status": "error", 
+            "description": "неверный ID эксперимента",
+        })
+        return
+    }
+
+    var requestData map[string]interface{}
+    if err := ctx.BindJSON(&requestData); err != nil {
+        ctx.JSON(http.StatusBadRequest, gin.H{
+            "status": "error",
+            "description": "неверный формат данных",
+        })
+        return
+    }
+
+    sampleId, hasSampleId := requestData["sample_id"].(float64)
+    massFraction, hasMassFraction := requestData["mass_fraction_percentage"].(float64)
+
+    if !hasSampleId || !hasMassFraction {
+        ctx.JSON(http.StatusBadRequest, gin.H{
+            "status": "error",
+            "description": "sample_id и mass_fraction_percentage обязательны",
+        })
+        return
+    }
+
+    // Обновляем массовую долю примесей для образца в эксперименте
+    err = h.Repository.UpdateMassFraction(uint(experimentId), uint(sampleId), massFraction)
+    if err != nil {
+        if errors.Is(err, repository.ErrNotFound) {
+            ctx.JSON(http.StatusNotFound, gin.H{
+                "status": "error",
+                "description": "эксперимент не найден",
+            })
+        } else {
+            ctx.JSON(http.StatusInternalServerError, gin.H{
+                "status": "error",
+                "description": "внутренняя ошибка сервера",
+            })
+        }
+        return
+    }
+
+    ctx.JSON(http.StatusOK, gin.H{
+        "message": "Mass fraction updated successfully",
+        "experiment_id": experimentId,
+        "sample_id": uint(sampleId),
+        "mass_fraction_percentage": massFraction,
+    })
+}
+
 func (h *Handler) filterExperimentsByAuth(experiments []ds.ImpurityFractionExperiment, ctx *gin.Context) []ds.ImpurityFractionExperiment {
-userID, err := getUserID(ctx)
-if err != nil {
-	return []ds.ImpurityFractionExperiment{}
-}
-
-user, err := h.Repository.GetUserByID(userID)
-if err == repository.ErrNotFound {
-	return []ds.ImpurityFractionExperiment{}
-}
-if err != nil {
-	return []ds.ImpurityFractionExperiment{}
-}
-
-if user.IsModerator {
-	return experiments
-}
-
-var userExperiments []ds.ImpurityFractionExperiment
-	for _, experiment := range experiments {
-			fmt.Println(experiment.ID)
-			if experiment.CreatorID == userID {
-					userExperiments = append(userExperiments, experiment)
-			}
+	userID, err := getUserID(ctx)
+	if err != nil {
+		return []ds.ImpurityFractionExperiment{}
 	}
-	
-	return userExperiments
 
+	user, err := h.Repository.GetUserByID(userID)
+	if err == repository.ErrNotFound {
+		return []ds.ImpurityFractionExperiment{}
+	}
+	if err != nil {
+		return []ds.ImpurityFractionExperiment{}
+	}
+
+	if user.IsModerator {
+		return experiments
+	}
+
+	var userExperiments []ds.ImpurityFractionExperiment
+	for _, experiment := range experiments {
+		fmt.Println(experiment.ID)
+		if experiment.CreatorID == userID {
+			userExperiments = append(userExperiments, experiment)
+		}
+	}
+	return userExperiments
 }
 
 func (h *Handler) hasAccessToExperiment(creatorID uuid.UUID, ctx *gin.Context) bool {
-userID, err := getUserID(ctx)
-if err != nil {
-	return false
-}
+	userID, err := getUserID(ctx)
+	if err != nil {
+		return false
+	}
 
-user, err := h.Repository.GetUserByID(userID)
-if err == repository.ErrNotFound {
-	return false
-}
-if err != nil {
-	return false
-}
+	user, err := h.Repository.GetUserByID(userID)
+	if err == repository.ErrNotFound {
+		return false
+	}
+	if err != nil {
+		return false
+	}
 
-return creatorID == userID || user.IsModerator
+	return creatorID == userID || user.IsModerator
 }
 
 func (h *Handler) getExperimentData(id uint) (dto.ExperimentResponse, error) {
