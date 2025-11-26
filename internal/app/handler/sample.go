@@ -16,10 +16,11 @@ import (
 
 // GetSamples godoc
 // @Summary Получить список образцов
-// @Description Возвращает все образцы или фильтрует по названию
+// @Description Возвращает все образцы или фильтрует по названию или по недавно просмотренным
 // @Tags soluble-samples
 // @Produce json
 // @Param search_sample query string false "Название образца для поиска"
+// @Param recently_viewed query boolean false "Показать недавно просмотренные"
 // @Success 200 {array} ds.AcidSolubleSample "Список образцов"
 // @Failure 500 {object} map[string]string "Внутренняя ошибка сервера"
 // @Router /soluble-samples [get]
@@ -27,18 +28,53 @@ func (h *Handler) GetSamples(ctx *gin.Context) {
 	var samples []ds.AcidSolubleSample
 	var err error
 
-	searchQuery := ctx.Query("search_sample")
-	if searchQuery == "" {
-		samples, err = h.Repository.GetSamples()
+	recentlyViewed := ctx.Query("recently_viewed")
+	if recentlyViewed == "true" {
+		// Получаем ID гостевой сессии
+		sessionID, exists := ctx.Get("guest_session_id")
+		if !exists {
+			ctx.JSON(http.StatusOK, []ds.AcidSolubleSample{})
+			return
+		}
+
+		sessionIDStr, ok := sessionID.(string)
+		if !ok {
+			ctx.JSON(http.StatusOK, []ds.AcidSolubleSample{})
+			return
+		}
+
+		// Получаем список ID просмотренных образцов
+		viewedIDs, err := h.Repository.GetViewedSamples(ctx.Request.Context(), sessionIDStr)
+		if err != nil {
+			ctx.JSON(http.StatusOK, []ds.AcidSolubleSample{})
+			return
+		}
+
+		if len(viewedIDs) == 0 {
+			ctx.JSON(http.StatusOK, []ds.AcidSolubleSample{})
+			return
+		}
+
+		// Получаем полные данные образцов
+		samples, err = h.Repository.GetSamplesByIDs(viewedIDs)
 		if err != nil {
 			h.errorHandler(ctx, http.StatusInternalServerError, err)
 			return
 		}
 	} else {
-		samples, err = h.Repository.GetSamplesByName(searchQuery)
-		if err != nil {
-			h.errorHandler(ctx, http.StatusInternalServerError, err)
-			return
+		searchQuery := ctx.Query("search_sample")
+		if searchQuery == "" {
+			samples, err = h.Repository.GetSamples()
+			if err != nil {
+				h.errorHandler(ctx, http.StatusInternalServerError, err)
+				return
+			}
+		} else {
+			samples, err = h.Repository.GetSamplesByName(searchQuery)
+			if err != nil {
+				h.errorHandler(ctx, http.StatusInternalServerError, err)
+				return
+			}
 		}
 	}
 	if samples == nil {
@@ -300,47 +336,5 @@ func (h *Handler) UpdateImage(ctx *gin.Context) {
 	})
 }
 
-// GetRecentlyViewedSamples godoc
-// @Summary Получить недавно просмотренные образцы
-// @Description Возвращает список недавно просмотренных образцов для текущей гостевой сессии
-// @Tags soluble-samples
-// @Produce json
-// @Success 200 {array} ds.AcidSolubleSample "Список недавно просмотренных образцов"
-// @Failure 500 {object} map[string]string "Внутренняя ошибка сервера"
-// @Router /soluble-samples/recently-viewed/list [get]
-func (h *Handler) GetRecentlyViewedSamples(ctx *gin.Context) {
-	// Получаем ID гостевой сессии
-	sessionID, exists := ctx.Get("guest_session_id")
-	if !exists {
-		ctx.JSON(http.StatusOK, []ds.AcidSolubleSample{})
-		return
-	}
 
-	sessionIDStr, ok := sessionID.(string)
-	if !ok {
-		ctx.JSON(http.StatusOK, []ds.AcidSolubleSample{})
-		return
-	}
-
-	// Получаем список ID просмотренных образцов
-	viewedIDs, err := h.Repository.GetViewedSamples(ctx.Request.Context(), sessionIDStr)
-	if err != nil {
-		ctx.JSON(http.StatusOK, []ds.AcidSolubleSample{})
-		return
-	}
-
-	if len(viewedIDs) == 0 {
-		ctx.JSON(http.StatusOK, []ds.AcidSolubleSample{})
-		return
-	}
-
-	// Получаем полные данные образцов
-	samples, err := h.Repository.GetSamplesByIDs(viewedIDs)
-	if err != nil {
-		h.errorHandler(ctx, http.StatusInternalServerError, err)
-		return
-	}
-
-	ctx.JSON(http.StatusOK, samples)
-}
 

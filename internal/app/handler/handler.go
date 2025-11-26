@@ -30,7 +30,6 @@ func (h *Handler) RegisterHandler(router *gin.Engine) {
 	unauthorized.POST("/users/sign-up", h.SignUp)
 	unauthorized.POST("/users/sign-in", h.SignIn)
 	unauthorized.GET("/soluble-samples", h.GetSamples) // список образцов
-	unauthorized.GET("/soluble-samples/recently-viewed/list", h.GetRecentlyViewedSamples) // недавно просмотренные образцы (должен быть ДО :id)
 	unauthorized.GET("/soluble-samples/:id", h.GetSample) // получить образец по id
 
 	// Проверка просто по заголовку внутри метода без использования middleware
