@@ -16,12 +16,14 @@ import (
 
 // GetSamples godoc
 // @Summary Получить список образцов
-// @Description Возвращает все образцы или фильтрует по названию или по недавно просмотренным
+// @Description Возвращает все образцы или фильтрует по названию. Поддерживает пагинацию.
 // @Tags soluble-samples
 // @Produce json
 // @Param search_sample query string false "Название образца для поиска"
 // @Param recently_viewed query boolean false "Показать недавно просмотренные"
-// @Success 200 {array} ds.AcidSolubleSample "Список образцов"
+// @Param page query int false "Номер страницы (по умолчанию 1)"
+// @Param limit query int false "Количество на странице (по умолчанию 20, макс 100)"
+// @Success 200 {object} repository.PaginatedSamples "Список образцов с пагинацией"
 // @Failure 500 {object} map[string]string "Внутренняя ошибка сервера"
 // @Router /soluble-samples [get]
 func (h *Handler) GetSamples(ctx *gin.Context) {
@@ -61,20 +63,57 @@ func (h *Handler) GetSamples(ctx *gin.Context) {
 			h.errorHandler(ctx, http.StatusInternalServerError, err)
 			return
 		}
+		ctx.JSON(http.StatusOK, samples)
+		return
+	}
+
+	// Проверяем параметры пагинации
+	pageStr := ctx.Query("page")
+	limitStr := ctx.Query("limit")
+	searchQuery := ctx.Query("search_sample")
+
+	// Если указаны параметры пагинации, используем пагинированный метод
+	if pageStr != "" || limitStr != "" {
+		page := 1
+		limit := 20
+
+		if pageStr != "" {
+			if p, err := strconv.Atoi(pageStr); err == nil && p > 0 {
+				page = p
+			}
+		}
+
+		if limitStr != "" {
+			if l, err := strconv.Atoi(limitStr); err == nil && l > 0 {
+				limit = l
+				if limit > 100 {
+					limit = 100 // Максимум 100 записей на страницу
+				}
+			}
+		}
+
+		paginatedSamples, err := h.Repository.GetSamplesPaginated(searchQuery, page, limit)
+		if err != nil {
+			h.errorHandler(ctx, http.StatusInternalServerError, err)
+			return
+		}
+
+		ctx.JSON(http.StatusOK, paginatedSamples)
+		return
+	}
+
+	// Без пагинации (обратная совместимость)
+	if searchQuery == "" {
+		samples, err = h.Repository.GetSamples()
+		if err != nil {
+			h.errorHandler(ctx, http.StatusInternalServerError, err)
+			return
+		}
 	} else {
-		searchQuery := ctx.Query("search_sample")
-		if searchQuery == "" {
-			samples, err = h.Repository.GetSamples()
-			if err != nil {
-				h.errorHandler(ctx, http.StatusInternalServerError, err)
-				return
-			}
-		} else {
-			samples, err = h.Repository.GetSamplesByName(searchQuery)
-			if err != nil {
-				h.errorHandler(ctx, http.StatusInternalServerError, err)
-				return
-			}
+		samples, err = h.Repository.GetSamplesByName(searchQuery)
+		if err != nil {
+			h.errorHandler(ctx, http.StatusInternalServerError, err)
+			return
 		}
 	}
 	if samples == nil {
