@@ -13,6 +13,15 @@ import (
 	"gorm.io/gorm"
 )
 
+// PaginatedSamples содержит образцы с метаданными пагинации
+type PaginatedSamples struct {
+	Samples    []ds.AcidSolubleSample `json:"samples"`
+	Total      int64                  `json:"total"`
+	Page       int                    `json:"page"`
+	Limit      int                    `json:"limit"`
+	TotalPages int                    `json:"total_pages"`
+}
+
 func (r *Repository) GetSamples() ([]ds.AcidSolubleSample, error) {
 	var samples []ds.AcidSolubleSample
 	err := r.db.Order("id").Where("deleted = false").Find(&samples).Error
@@ -24,6 +33,47 @@ func (r *Repository) GetSamples() ([]ds.AcidSolubleSample, error) {
 	}
 
 	return samples, nil
+}
+
+// GetSamplesPaginated возвращает образцы с пагинацией
+func (r *Repository) GetSamplesPaginated(name string, page, limit int) (*PaginatedSamples, error) {
+	var samples []ds.AcidSolubleSample
+	var total int64
+
+	// Базовый запрос
+	query := r.db.Model(&ds.AcidSolubleSample{}).Where("deleted = false")
+
+	// Фильтрация по имени (если задано)
+	if name != "" {
+		query = query.Where("title ILIKE ? OR formula ILIKE ?", "%"+name+"%", "%"+name+"%")
+	}
+
+	// Подсчет общего количества
+	if err := query.Count(&total).Error; err != nil {
+		return nil, err
+	}
+
+	// Вычисление offset
+	offset := (page - 1) * limit
+
+	// Получение данных с пагинацией
+	if err := query.Order("id").Limit(limit).Offset(offset).Find(&samples).Error; err != nil {
+		return nil, err
+	}
+
+	// Вычисление общего количества страниц
+	totalPages := int(total) / limit
+	if int(total)%limit != 0 {
+		totalPages++
+	}
+
+	return &PaginatedSamples{
+		Samples:    samples,
+		Total:      total,
+		Page:       page,
+		Limit:      limit,
+		TotalPages: totalPages,
+	}, nil
 }
 
 func (r *Repository) GetSample(id uint) (*ds.AcidSolubleSample, error) {
